@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Songa Mobility — Mobile App Documentation</title>
+<style>
+  :root {
+    --navy: #075155;
+    --teal: #1D9E75;
+    --teal-light: #E1F5EE;
+    --teal-mid: #0F6E56;
+    --amber: #EF9F27;
+    --text: #1C2B3A;
+    --text-muted: #5A6B7A;
+    --text-light: #8A9BAA;
+    --bg: #F7F9FC;
+    --bg-card: #FFFFFF;
+    --border: #E2E8EF;
+    --sidebar-w: 280px;
+    --font-ui: -apple-system,'Segoe UI',sans-serif;
+    --font-mono: 'Menlo',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:Georgia,serif;background:var(--bg);color:var(--text);font-size:16px;line-height:1.75}
+  #app{display:flex;min-height:100vh}
+  #sidebar{width:var(--sidebar-w);background:var(--navy);position:fixed;top:0;left:0;bottom:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;z-index:100}
+  #sidebar::-webkit-scrollbar{width:4px}
+  #sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+  .logo-img{width: 240px;height: 70px;overflow: hidden;}
+  .logo-img img{width: 100%;height: 100%;object-fit: scale-down; object-position: center;}
+  .logo-img:hover{object-fit: cover;width: 105%;}
+  .sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
+  .sidebar-logo .brand{font-family:var(--font-ui);font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:4px}
+  .sidebar-logo h1{font-family:var(--font-ui);font-size:17px;font-weight:700;color:#fff;line-height:1.2}
+  .sidebar-logo .version{font-family:var(--font-ui);font-size:11px;color:rgba(255,255,255,0.28);margin-top:4px}
+  #sidebar-search{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
+  .search-wrap{position:relative}
+  #sidebar-search input{width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;font-family:var(--font-ui);font-size:13px;padding:7px 10px 7px 28px;outline:none}
+  #sidebar-search input::placeholder{color:rgba(255,255,255,0.28)}
+  #sidebar-search input:focus{border-color:var(--teal)}
+  .search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.28);font-size:13px;pointer-events:none}
+  #nav{padding:8px 0 24px;flex:1}
+  .nav-section-label{font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(255,255,255,0.22);padding:16px 20px 6px}
+  .nav-item{display:flex;align-items:center;gap:8px;padding:6px 20px;font-family:var(--font-ui);font-size:13px;color:rgba(255,255,255,0.58);cursor:pointer;transition:all 0.12s;border-left:2px solid transparent;text-decoration:none;line-height:1.4}
+  .nav-item:hover{color:#fff;background:rgba(255,255,255,0.05)}
+  .nav-item.active{color:#fff;border-left-color:var(--teal);background:rgba(29,158,117,0.12)}
+  .nav-item .num{font-size:10px;font-weight:600;color:rgba(255,255,255,0.2);min-width:18px;text-align:right;flex-shrink:0}
+  .nav-item.active .num{color:var(--teal)}
+  #main{margin-left:var(--sidebar-w);flex:1;min-height:100vh}
+  #topbar{background:var(--bg-card);border-bottom:1px solid var(--border);padding:0 48px;height:54px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:50}
+  #topbar-search{flex:1;max-width:480px;position:relative}
+  #topbar-search input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-family:var(--font-ui);font-size:14px;padding:8px 12px 8px 34px;outline:none;color:var(--text);transition:border-color 0.15s,box-shadow 0.15s}
+  #topbar-search input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(29,158,117,0.1)}
+  #topbar-search input::placeholder{color:var(--text-light)}
+  .topbar-search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-light);font-size:14px;pointer-events:none}
+  #search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.12);max-height:420px;overflow-y:auto;display:none;z-index:200}
+  #search-results.open{display:block}
+  .sr-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.1s}
+  .sr-item:last-child{border-bottom:none}
+  .sr-item:hover{background:var(--bg)}
+  .sr-item-title{font-family:var(--font-ui);font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px}
+  .sr-item-preview{font-family:var(--font-ui);font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sr-item-chapter{font-family:var(--font-ui);font-size:11px;color:var(--teal);margin-bottom:3px}
+  .sr-empty{padding:24px;text-align:center;font-family:var(--font-ui);font-size:13px;color:var(--text-muted)}
+  .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .topbar-badge{font-family:var(--font-ui);font-size:11px;background:var(--teal-light);color:var(--teal-mid);padding:3px 8px;border-radius:20px;font-weight:600}
+  #content{padding:48px 48px 96px;max-width:820px}
+  .chapter-page{display:none}
+  .chapter-page.active{display:block}
+  .chapter-hero{margin-bottom:40px;padding-bottom:32px;border-bottom:1px solid var(--border)}
+  .chapter-tag{display:inline-flex;align-items:center;font-family:var(--font-ui);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--teal);background:var(--teal-light);padding:4px 10px;border-radius:20px;margin-bottom:12px}
+  .chapter-hero h1{font-family:var(--font-ui);font-size:32px;font-weight:700;color:var(--navy);line-height:1.2;margin-bottom:12px}
+  .chapter-hero .lead{font-size:17px;color:var(--text-muted);line-height:1.65;max-width:680px}
+  .section-h2{font-family:var(--font-ui);font-size:20px;font-weight:700;color:var(--navy);margin:40px 0 12px;padding-top:8px}
+  .section-h3{font-family:var(--font-ui);font-size:12px;font-weight:700;color:var(--teal-mid);margin:28px 0 8px;text-transform:uppercase;letter-spacing:0.06em}
+  .doc-body p{margin-bottom:16px;color:var(--text)}
+  .info-box{background:var(--teal-light);border-left:3px solid var(--teal);border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;font-size:14.5px;color:var(--teal-mid);font-family:var(--font-ui)}
+  .info-box strong{color:var(--teal-mid);font-weight:700}
+  .warn-box{background:#FFF8E6;border-left:3px solid var(--amber);border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;font-size:14.5px;color:#6B4A00;font-family:var(--font-ui)}
+  .doc-table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px;font-family:var(--font-ui)}
+  .doc-table th{background:var(--navy);color:#fff;padding:10px 14px;text-align:left;font-weight:600;font-size:12px;letter-spacing:0.04em}
+  .doc-table th:first-child{border-radius:6px 0 0 0}
+  .doc-table th:last-child{border-radius:0 6px 0 0}
+  .doc-table td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
+  .doc-table tr:hover td{background:var(--bg)}
+  .doc-table td:first-child{font-weight:600;color:var(--teal-mid);white-space:nowrap}
+  .badge{display:inline-block;font-family:var(--font-ui);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:0.03em}
+  .badge-green{background:#EAF7F0;color:#0D6B44}
+  .badge-amber{background:#FFF3DA;color:#8A5500}
+  .badge-red{background:#FFEAEA;color:#991F1F}
+  .badge-blue{background:#E6F1FB;color:#185FA5}
+  .badge-teal{background:var(--teal-light);color:var(--teal-mid)}
+  .badge-gray{background:#F1EFE8;color:#444441}
+  .field-list{margin:12px 0 20px}
+  .field-item{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14.5px;font-family:var(--font-ui)}
+  .field-item:last-child{border-bottom:none}
+  .field-name{font-weight:600;color:var(--teal-mid);min-width:160px;flex-shrink:0}
+  .field-desc{color:var(--text-muted);line-height:1.5}
+  code{font-family:var(--font-mono);font-size:13px;background:#F1EEE8;color:#7A3200;padding:1px 5px;border-radius:4px}
+  .step-list{counter-reset:step;margin:16px 0 24px}
+  .step-item{display:flex;gap:14px;margin-bottom:16px;font-family:var(--font-ui);font-size:14.5px}
+  .step-num{min-width:28px;height:28px;border-radius:50%;background:var(--teal);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px}
+  .step-body{color:var(--text);line-height:1.6}
+  .step-body strong{color:var(--navy)}
+  .home-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:24px 0}
+  .home-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;cursor:pointer;transition:all 0.15s;text-decoration:none;display:block}
+  .home-card:hover{border-color:var(--teal);box-shadow:0 4px 16px rgba(29,158,117,0.1);transform:translateY(-1px)}
+  .home-card-num{font-family:var(--font-ui);font-size:11px;font-weight:700;color:var(--teal);margin-bottom:6px}
+  .home-card-title{font-family:var(--font-ui);font-size:14px;font-weight:700;color:var(--navy);margin-bottom:4px;line-height:1.3}
+  .home-card-desc{font-family:var(--font-ui);font-size:12px;color:var(--text-muted);line-height:1.4}
+  .breadcrumb{font-family:var(--font-ui);font-size:12px;color:var(--text-light);margin-bottom:20px;display:flex;align-items:center;gap:6px}
+  .breadcrumb a{color:var(--teal);text-decoration:none;cursor:pointer}
+  .breadcrumb a:hover{text-decoration:underline}
+  .flow{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:20px 0}
+  .flow-step{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:9px 14px;font-family:var(--font-ui);font-size:13px;font-weight:600;color:var(--navy)}
+  .flow-arrow{font-size:14px;color:var(--text-light)}
+  .flow-step.teal{background:var(--teal-light);border-color:var(--teal);color:var(--teal-mid)}
+  .pill-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  .pill{font-family:var(--font-ui);font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid var(--border);color:var(--text-muted);background:var(--bg-card)}
+  ul.doc-ul{font-family:var(--font-ui);font-size:14.5px;color:var(--text-muted);padding-left:20px;margin:12px 0 20px}
+  ul.doc-ul li{margin-bottom:8px}
+  ul.doc-ul li strong{color:var(--text)}
+  @media(max-width:900px){:root{--sidebar-w:240px}#content{padding:32px 24px 64px}#topbar{padding:0 24px}}
+
+  .doc-screenshot{margin:28px 0;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--bg-card);box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+  .doc-screenshot img{width:100%;height:auto;display:block}
+  .doc-screenshot figcaption{font-family:var(--font-ui);font-size:12px;color:var(--text-muted);padding:10px 14px;border-top:1px solid var(--border);background:var(--bg)}
+  .doc-screenshot-wide{}
+  .doc-screenshot-tall img{max-height:600px;width:auto;margin:0 auto;display:block}
+  .doc-screenshot-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:28px 0}
+  .doc-screenshot-grid .doc-screenshot{margin:0}
+  .doc-screenshot-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:28px 0}
+  .doc-screenshot-grid-3 .doc-screenshot{margin:0}
+  @media(max-width:700px){.doc-screenshot-grid,.doc-screenshot-grid-3{grid-template-columns:1fr}}
+
+  .part-divider{background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;margin:8px 20px 4px;display:block}
+</style>
+</head>
+<body>
+<div id="app">
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-img"><img src="img/Songa_logo_white_web.png" onclick="showPage('home',this)"></div>
+    <div class="brand">Songa Mobility</div>
+    <h1>Mobile App Docs</h1>
+    <div class="version">Mobile Application · April 2026</div>
+  </div>
+  <div id="sidebar-search">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="sidebarSearchInput" placeholder="Quick find…" autocomplete="off"/>
+    </div>
+  </div>
+  <div id="nav">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" data-page="home" onclick="showPage('home',this)"><span class="num">—</span>Home</a>
+    <a class="nav-item" data-page="ch1" onclick="showPage('ch1',this)"><span class="num">01</span>Introduction</a>
+    <div class="nav-section-label">Part 1 — Driver App</div>
+    <a class="nav-item" data-page="ch2" onclick="showPage('ch2',this)"><span class="num">02</span>Aggregation Trip Flow</a>
+    <a class="nav-item" data-page="ch3" onclick="showPage('ch3',this)"><span class="num">03</span>SOS Flow</a>
+    <a class="nav-item" data-page="ch4" onclick="showPage('ch4',this)"><span class="num">04</span>Kilikawi Session Flow</a>
+    <a class="nav-item" data-page="ch5" onclick="showPage('ch5',this)"><span class="num">05</span>Driver Wallet</a>
+    <a class="nav-item" data-page="ch6" onclick="showPage('ch6',this)"><span class="num">06</span>Rental Flow</a>
+    <a class="nav-item" data-page="ch7" onclick="showPage('ch7',this)"><span class="num">07</span>Profile &amp; Time-Off</a>
+    <div class="nav-section-label">Part 2 — Battery Agent App</div>
+    <a class="nav-item" data-page="ch8" onclick="showPage('ch8',this)"><span class="num">08</span>Hub Management &amp; Charging</a>
+    <a class="nav-item" data-page="ch9" onclick="showPage('ch9',this)"><span class="num">09</span>Battery Transfer Flow</a>
+    <div class="nav-section-label">Reference</div>
+    <a class="nav-item" data-page="ch10" onclick="showPage('ch10',this)"><span class="num">10</span>IoT Platform Reference</a>
+    <a class="nav-item" data-page="ch11" onclick="showPage('ch11',this)"><span class="num">11</span>Glossary</a>
+  </div>
+</nav>
+<div id="main">
+  <div id="topbar">
+    <div id="topbar-search">
+      <span class="topbar-search-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="Search documentation… (Ctrl+K)" autocomplete="off"/>
+      <div id="search-results"></div>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-badge">April 2026</span>
+      <span style="font-family:var(--font-ui);font-size:12px;color:var(--text-light)">Antarctica Global</span>
+    </div>
+  </div>
+  <div id="content">
+
+<!-- HOME PAGE -->
+<div class="chapter-page active" id="page-home">
+  <div class="chapter-hero">
+    <div class="chapter-tag">Documentation</div>
+    <h1>Songa Mobile App</h1>
+    <p class="lead">Complete reference documentation for the Songa mobile application — covering driver flows, Kilikawi sessions, rentals, wallet, and the Battery Agent / Hub Manager app. Prepared by Antarctica Global Technology and Consulting, April 2026.</p>
+  </div>
+  <p style="font-family:var(--font-ui);font-size:14px;color:var(--text-muted);margin-bottom:20px">11 chapters · Two apps: Driver App (Part 1) &amp; Battery Agent App (Part 2) · Use the search bar or navigate by section</p>
+  <div class="home-grid">
+    <a class="home-card" onclick="showPage('ch1',null)"><div class="home-card-num">Chapter 01</div><div class="home-card-title">Introduction</div><div class="home-card-desc">Document scope, app variants, and invite-only authentication</div></a>
+    <a class="home-card" onclick="showPage('ch2',null)"><div class="home-card-num">Chapter 02</div><div class="home-card-title">Aggregation Trip Flow</div><div class="home-card-desc">Full step-by-step trip execution from trike scan to trip summary</div></a>
+    <a class="home-card" onclick="showPage('ch3',null)"><div class="home-card-num">Chapter 03</div><div class="home-card-title">SOS Flow</div><div class="home-card-desc">Mid-trip emergency: trike breakdown, battery swap, battery transfer</div></a>
+    <a class="home-card" onclick="showPage('ch4',null)"><div class="home-card-num">Chapter 04</div><div class="home-card-title">Kilikawi Session Flow</div><div class="home-card-desc">Agri-tech service operations — asset verification to session end</div></a>
+    <a class="home-card" onclick="showPage('ch5',null)"><div class="home-card-num">Chapter 05</div><div class="home-card-title">Driver Wallet</div><div class="home-card-desc">KSH commission, kWh energy, rental credits, ERP integration</div></a>
+    <a class="home-card" onclick="showPage('ch6',null)"><div class="home-card-num">Chapter 06</div><div class="home-card-title">Rental Flow</div><div class="home-card-desc">Booking, dispatch, digital signature, and rental trip summary</div></a>
+    <a class="home-card" onclick="showPage('ch7',null)"><div class="home-card-num">Chapter 07</div><div class="home-card-title">Profile &amp; Time-Off</div><div class="home-card-desc">Profile panel, time-off requests, approval flow</div></a>
+    <a class="home-card" onclick="showPage('ch8',null)"><div class="home-card-num">Chapter 08</div><div class="home-card-title">Hub Management &amp; Charging</div><div class="home-card-desc">Battery Agent app — hubs tab, battery listing, charging flow</div></a>
+    <a class="home-card" onclick="showPage('ch9',null)"><div class="home-card-num">Chapter 09</div><div class="home-card-title">Battery Transfer Flow</div><div class="home-card-desc">Check-out, check-in, and swap flows for inter-hub battery movement</div></a>
+    <a class="home-card" onclick="showPage('ch10',null)"><div class="home-card-num">Chapter 10</div><div class="home-card-title">IoT Platform Reference</div><div class="home-card-desc">Hub dashboard, inverter detail, charger node telemetry</div></a>
+    <a class="home-card" onclick="showPage('ch11',null)"><div class="home-card-num">Chapter 11</div><div class="home-card-title">Glossary</div><div class="home-card-desc">Key terms: BMS, TCU, SOC, SOH, Kilikawi, Battery Ambulance, and more</div></a>
+  </div>
+</div>
+
+<!-- CH1 — INTRODUCTION -->
+<div class="chapter-page" id="page-ch1">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 1</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 01</div><h1>Introduction</h1><p class="lead">Document scope, the two mobile app variants, and the invite-only authentication flow for drivers and agents.</p></div>
+  <div class="doc-body">
+    <h2 class="section-h2">1.1 About This Document</h2>
+    <p>This document covers the mobile flows executed by drivers, Kilikawi agents, hub managers, and battery agents on the Songa Mobility platform. It is a companion to the Web Application Feature Documentation and the Master Context Document.</p>
+    <p>This is a working reference — content reflects the platform as it currently stands. Additional flows will be added as documentation progresses.</p>
+    <div class="info-box"><strong>Document Scope:</strong> Part 1 covers Driver and Kilikawi agent flows: aggregation trips, sessions, rentals, SOS, wallet, and time-off. Part 2 covers the Battery Agent / Hub Manager app: battery charging, hub management, and battery transfer flows.</div>
+
+    <h2 class="section-h2">1.2 Two Mobile App Variants</h2>
+    <table class="doc-table">
+      <tr><th>App</th><th>Users</th><th>Navigation</th><th>Primary Functions</th></tr>
+      <tr><td>Driver App</td><td>Drivers, Kilikawi agents</td><td>Tab bar: Trips, Sessions, Rentals, Wallet</td><td>Aggregation trips, Kilikawi sessions, trike rentals. Login As selection sets the default homepage.</td></tr>
+      <tr><td>Battery Agent / Hub Manager App</td><td>Battery agents, hub managers</td><td>Three-tab: Hubs, Transfer Requests, Kilikawi</td><td>Battery charging, inter-hub battery transfers, hub asset visibility.</td></tr>
+    </table>
+    <div class="info-box"><strong>Login As:</strong> After entering credentials on the Driver App, the driver selects Aggregation, Kilikawi, or Rental. This sets the default homepage only — it does not restrict access to other functions.</div>
+
+    <h2 class="section-h2">1.3 Authentication</h2>
+    <p>Access is invite-only. No driver or agent can self-register. The flow is identical for both app variants.</p>
+    <div class="step-list">
+      <div class="step-item"><div class="step-num">1</div><div class="step-body"><strong>Hub manager adds the driver</strong> on the web app, entering their email address.</div></div>
+      <div class="step-item"><div class="step-num">2</div><div class="step-body"><strong>A one-time invitation link</strong> is emailed to the driver, valid for 24 hours.</div></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-body"><strong>Driver taps the link</strong> — this redirects from the browser directly into the app.</div></div>
+      <div class="step-item"><div class="step-num">4</div><div class="step-body"><strong>Name and email are pre-filled.</strong> The driver sets a password and lands on the login screen.</div></div>
+    </div>
+    <div class="warn-box"><strong>Invitation Expiry:</strong> Invitation links expire after 24 hours. If a driver does not act on the link in time, the hub manager must re-invite from the web app. The driver's status shows <em>Signup Pending</em> until onboarding is complete.</div>
+  </div>
+</div>
+
+<!-- CH2 — AGGREGATION TRIP FLOW -->
+<div class="chapter-page" id="page-ch2">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 2</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 02</div><h1>Aggregation Trip Flow</h1><p class="lead">The primary field operation. Steps are strictly sequential — each unlocks only after the previous is complete. The full trip executes offline after an initial download over hub Wi-Fi.</p></div>
+  <div class="doc-body">
+    <div class="info-box"><strong>Offline First:</strong> Before leaving the hub, the full trip is downloaded over hub Wi-Fi. The entire trip executes offline. On return, a mandatory sync pushes all data to the platform before the trip can be ended. Local storage is cleared after sync to protect device memory.</div>
+
+    <h2 class="section-h2">2.1 Trip Listing</h2>
+    <p>The Trips tab shows all assigned trips grouped by date. The <strong>Up Next</strong> card highlights the most imminent trip with a Start Trip button. Each trip row shows the Trip ID, scheduled time, recommended energy (kWh), and stop count. Tomorrow's trips are visible but not yet actionable.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-003-010.png" alt="Trips tab — upcoming trips grouped by date, Up Next card with Start Trip button" loading="lazy">
+  <figcaption>Trips tab — upcoming trips grouped by date, Up Next card with Start Trip</figcaption>
+</figure>
+
+    <h2 class="section-h2">2.2 Trike Verification</h2>
+    <p>On tapping Start Trip, the driver must verify the trike. Two methods are available — both lead to the same result. If the assigned trike is unavailable, any trike can be selected.</p>
+    <ul class="doc-ul">
+      <li><strong>Scan QR</strong> — Camera opens to scan the QR code on the trike. Trip ID and stop count are shown as context.</li>
+      <li><strong>Select Manually</strong> — Searchable text field: driver types the trike registration, selects from list, and saves.</li>
+    </ul>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-005-019.jpg" alt="Scan QR — live camera with Trip ID and stop count shown above" loading="lazy">
+    <figcaption>Scan QR — live camera view</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-005-020.jpg" alt="Manual entry — trike registration typed, select from list, Save" loading="lazy">
+    <figcaption>Manual entry — type registration, select, save</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">2.3 Safety Checklist</h2>
+    <p>After trike verification, the driver completes the pre-trip safety checklist. Items are configured by the hub manager. Mandatory items (marked *) must all pass. The driver sees <strong>Known Issues</strong> from prior service records as context.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-006-024.jpg" alt="Safety Checklist — Horn*, Indicators*, Mirrors*, Tyre pressure*, Brake*, optional items" loading="lazy">
+    <figcaption>Safety checklist — mandatory items marked *</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-006-025.jpg" alt="TRIKE IS SAFE TO DRIVE — KTWC_602R ready, Slide To Accept Trip" loading="lazy">
+    <figcaption>All mandatory items pass — Slide To Accept Trip</figcaption>
+  </figure>
+</div>
+
+    <div class="warn-box"><strong>Checklist Failure:</strong> If a mandatory item fails, the screen shows <strong>"TRIKE IS NOT SAFE TO DRIVE"</strong>. The driver can either (1) <em>Inform Fleet Manager</em> — sends an email to the hub manager — or (2) <em>Scan Another Trike</em> — resets to trike selection with a different trike.</div>
+
+    <h2 class="section-h2">2.4 Container Scanning</h2>
+    <p>If canisters or crates are assigned to the trip, the driver scans each one by QR code. The screen shows the assigned count per type and how many have been scanned. The driver must meet the minimum but can scan additional containers beyond the assignment if needed.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-007-029.jpg" alt="Scan Containers — 6 canisters 6/6 scanned, 4 crates 4/4 scanned, Scan More and Save & Proceed" loading="lazy">
+  <figcaption>Container scanning — assigned counts with progress and Scan More option</figcaption>
+</figure>
+
+    <h2 class="section-h2">2.5 Pre-Departure Collection from Parking Lot</h2>
+    <p>Before heading out, the driver is asked whether any produce needs to be collected from the parking lot for delivery to farmers en route (such as animal feed). If yes, the driver selects the produce type, enters the weight, and can use <strong>Read From Scale</strong> to pull the weight directly from a Bluetooth-connected smart scale. This step is not mandatory.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-008-033.jpg" alt="Collect from parking lot — Type of produce: Feed, Total Weight, Read From Scale" loading="lazy">
+  <figcaption>Pre-departure collection — optional produce pickup with Bluetooth scale support</figcaption>
+</figure>
+
+    <h2 class="section-h2">2.6 Stop Navigation</h2>
+    <p>For each stop, the driver sees the stop name, full address, a <strong>Navigate</strong> button (opens the maps app with the stop coordinates pre-loaded), and an <strong>I Have Arrived</strong> button. Tapping I Have Arrived triggers a 200-metre geofence check. If outside, the driver is warned but can still proceed. Previous stops are listed below for reference.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-009-037.jpg" alt="Stop 1 — Sengera Market: Navigate and I Have Arrived, Previous Stops shows Parking Lot as origin" loading="lazy">
+  <figcaption>Stop navigation — Navigate button, geofence arrival check, previous stops</figcaption>
+</figure>
+
+    <h2 class="section-h2">2.7 Farmer Interaction Options</h2>
+    <p>After arriving at a stop, the driver selects how to interact for each farmer at that stop:</p>
+    <ul class="doc-ul">
+      <li><strong>Scan &amp; Add</strong> — Scans the farmer's QR code to identify them and record activity.</li>
+      <li><strong>New Entry</strong> — Registers a new farmer on the spot. Logged as <em>Approval Pending</em> on the web until the hub manager verifies.</li>
+      <li><strong>No Show</strong> — Used when no farmers turn up at the collection point for any activity.</li>
+    </ul>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-010-041.jpg" alt="ARRIVED AT STOP 1 — Sengera Market: Scan & Add, New Entry, No Show options" loading="lazy">
+  <figcaption>Farmer interaction options at each stop</figcaption>
+</figure>
+
+    <h2 class="section-h2">2.8 Farmer Verification</h2>
+    <p>On scanning a farmer's QR code, a <strong>VERIFIED FARMER</strong> banner confirms identification. The farmer's name, phone number, and home stop are shown. The driver then selects the activity type: Collection or Delivery. A farmer from a different stop can be served at any stop within the same hub — the app flags this clearly.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-011-045.jpg" alt="VERIFIED FARMER — Jerusha Mwebi, 0797539815, Sengera Market. Select Collection or Delivery" loading="lazy">
+  <figcaption>Farmer verification — confirmed identity with activity selection</figcaption>
+</figure>
+
+    <h2 class="section-h2">2.9 Collection Activity</h2>
+    <p>On selecting Collection, the driver enters the produce type, weight (manual or via Bluetooth scale), and for milk must also tap <strong>Scan Canister</strong> to link the specific canister used — maintaining per-farmer traceability. Multiple collection entries can be added before saving. Comments are optional.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-012-049.jpg" alt="Collection form — produce type, weight, Read From Scale, Scan Canister, Save All Activities" loading="lazy">
+  <figcaption>Collection form — Bluetooth scale support and canister scanning for milk</figcaption>
+</figure>
+
+    <table class="doc-table">
+      <tr><th>Field</th><th>Description</th></tr>
+      <tr><td>Type of Produce</td><td>Dropdown of commodities configured for this stop — Milk, Banana, Feed, etc.</td></tr>
+      <tr><td>Total Weight</td><td>Manual weight entry in kg. Auto-populated if a Bluetooth scale is connected and Read From Scale is tapped.</td></tr>
+      <tr><td>Scan Canister</td><td>Scans the QR of the canister used for this farmer's milk — links canister to farmer record. Required for milk.</td></tr>
+      <tr><td>Report Spoilt Milk</td><td>Opens the spoilt milk form. Available for milk collection and milk delivery activities.</td></tr>
+      <tr><td>Save All Activities</td><td>Saves all entries for this farmer. Driver can then proceed to next farmer or next stop.</td></tr>
+    </table>
+
+    <h2 class="section-h2">2.10 Spoilt Milk Reporting</h2>
+    <p>Spoilt milk can be reported during collection or delivery of milk. The driver enters the weight of spoilt milk and mandatory remarks describing the cause (e.g. "milk was diluted with water").</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-013-053.jpg" alt="Spoilt milk form — Total Weight (Kg) and Remarks both required, Save" loading="lazy">
+  <figcaption>Spoilt milk form — weight and cause remarks are both mandatory</figcaption>
+</figure>
+
+    <h2 class="section-h2">2.11 Delivery Activity</h2>
+    <p>On selecting Delivery, the driver enters the produce type and weight delivered (in litres for milk). An optional comments field is available. A <strong>Report Spoilt Milk</strong> link appears for milk deliveries. After saving the delivery activity, the driver must upload a physical receipt.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-014-057.jpg" alt="Delivery form — Milk, weight in Litres, Comments, Report Spoilt Milk" loading="lazy">
+    <figcaption>Delivery form with spoilt milk option</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-014-058.jpg" alt="Upload Receipt — Receipt ID, Capture or Upload photo" loading="lazy">
+    <figcaption>Receipt upload — ID and photo required</figcaption>
+  </figure>
+</div>
+
+    <div class="info-box"><strong>Receipt Upload:</strong> The driver must enter the Receipt ID and attach a photo of the physical receipt from the off-taker. If offline at the time, the upload is queued locally and must be completed before the trip can end. All receipts must then be verified by the Hub Manager on the web before the trip reaches clean Completed status.</div>
+
+    <h2 class="section-h2">2.12 Missed Farmers</h2>
+    <p>When the driver taps Proceed to Next Stop, the app checks whether any farmers scheduled at that stop were not processed. If any were missed, a modal lists them by name with phone icons so the driver can call if needed. The driver can go back and serve them or confirm and proceed.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-015-062.jpg" alt="3 Farmers were missed — Steven Oyugi, Viola Toperesu, Moses Sambaza listed with call icons. Cancel or Proceed." loading="lazy">
+  <figcaption>Missed farmers modal — call icons and option to go back or proceed</figcaption>
+</figure>
+
+    <h2 class="section-h2">2.13 Return to Parking Lot</h2>
+    <p>On arriving back at the hub, the app shows four items. Three must be completed before the <strong>End Trip</strong> button becomes active:</p>
+    <ul class="doc-ul">
+      <li><strong>Add Delivery</strong> — For any produce to be delivered at the hub itself.</li>
+      <li><strong>Record Battery Energy</strong> — Logs the post-trip energy per battery. Once TCU is integrated, this auto-populates from the IoT platform.</li>
+      <li><strong>Upload Missing Receipts</strong> — Uploads any receipts not captured at the delivery stops.</li>
+    </ul>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-016-066.jpg" alt="ARRIVED AT PARKING LOT — Add Delivery, Record Battery Energy, Upload 4 Missing Receipts shown. End Trip greyed until all done." loading="lazy">
+  <figcaption>Parking lot return — three mandatory items before End Trip activates</figcaption>
+</figure>
+
+    <h2 class="section-h2">2.14 Trip Summary</h2>
+    <p>After the trip ends, the driver sees a full summary with an overall card and tabbed detail views.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-017-071.jpg" alt="Trip Summary overall — 7 stops, distance, weight collected, weight delivered" loading="lazy">
+    <figcaption>Overall trip summary card</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-017-072.jpg" alt="Trip Summary — Trike tab with odometer, speed, and Safety Checklist link" loading="lazy">
+    <figcaption>Trike and battery tabs</figcaption>
+  </figure>
+</div>
+
+    <table class="doc-table">
+      <tr><th>Tab</th><th>Content</th></tr>
+      <tr><td>Overall Summary</td><td>Total stops, distance (km), total weight collected, total weight delivered</td></tr>
+      <tr><td>Trike</td><td>Registration number, odometer start/end, average speed, max speed, Safety Checklist Form link</td></tr>
+      <tr><td>Battery</td><td>Per-battery: Start Energy, End Energy, Energy Consumed</td></tr>
+      <tr><td>Stops</td><td>Per-stop breakdown of every farmer — commodity, weight, spoilt milk, delivery weight, New Entry badges</td></tr>
+      <tr><td>Commission</td><td>Commission earned for the trip based on weekly settlement rules</td></tr>
+    </table>
+
+<figure class="doc-screenshot doc-screenshot-wide">
+  <img src="img-mobile/page-018-077.png" alt="Aggregation Trip at a glance — end-to-end flow from trike scan to trip summary" loading="lazy">
+  <figcaption>Aggregation trip flow at a glance — full end-to-end sequence</figcaption>
+</figure>
+
+  </div>
+</div>
+
+<!-- CH3 — SOS FLOW -->
+<div class="chapter-page" id="page-ch3">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 3</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 03</div><h1>SOS Flow</h1><p class="lead">The SOS button appears in the top bar of every active trip screen. It allows the driver to raise an emergency request mid-trip without ending the trip.</p></div>
+  <div class="doc-body">
+    <p>Three types of assistance are available from the SOS menu:</p>
+    <div class="pill-wrap">
+      <span class="pill">Trike Break Down</span>
+      <span class="pill">Swap Batteries</span>
+      <span class="pill">Transfer Batteries</span>
+    </div>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-019-081.jpg" alt="SOS menu — Trike Break Down, Swap Batteries, Transfer Batteries" loading="lazy">
+  <figcaption>SOS menu — three emergency options available mid-trip</figcaption>
+</figure>
+
+    <h2 class="section-h2">3.1 Trike Breakdown</h2>
+    <p>If the trike fails, the driver taps <strong>Trike Break Down</strong> and selects one or more reasons from a checklist. The hub manager is notified immediately on the web app. The follow-up flow — dispatching a technician or replacement trike — is handled offline.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-020-085.jpg" alt="Trike breakdown — multi-select: Battery discharged, Tyre punctured, Engine not starting, Brake fail, Met with accident" loading="lazy">
+  <figcaption>Trike breakdown — multi-select reason checklist, hub manager notified instantly</figcaption>
+</figure>
+
+    <table class="doc-table">
+      <tr><th>Reason</th><th>Description</th></tr>
+      <tr><td>Battery Discharged</td><td>Trike batteries are fully depleted and unable to power the vehicle</td></tr>
+      <tr><td>Tyre is Punctured</td><td>Flat tyre preventing the trike from moving</td></tr>
+      <tr><td>Engine Not Starting</td><td>Trike stalls or fails to start</td></tr>
+      <tr><td>Brake Fail</td><td>Braking system malfunction</td></tr>
+      <tr><td>Met with an Accident</td><td>Collision or incident involving the trike</td></tr>
+    </table>
+
+    <h2 class="section-h2">3.2 Swap Batteries</h2>
+    <p>If batteries are depleted mid-trip, the driver taps <strong>Swap Batteries</strong>. A hub agent at the swap point is informed through the web app. The driver visits, hands over depleted batteries, and receives charged replacements. The driver then scans each new battery on the app to check it in before resuming. This changes the current ownership of the batteries.</p>
+
+<div class="doc-screenshot-grid-3">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-021-089.jpg" alt="Swap Batteries — KSC9451 and KSC4567 listed, Scan a Battery button" loading="lazy">
+    <figcaption>Batteries to swap listed</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-021-090.jpg" alt="Scanning — KSC9451 ticked, KSC4567 still pending, Scan Next Battery" loading="lazy">
+    <figcaption>Scanning in progress</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-021-091.jpg" alt="SUCCESS — 2 Batteries checked-in, Resume Trip" loading="lazy">
+    <figcaption>All batteries confirmed — Resume Trip</figcaption>
+  </figure>
+</div>
+
+    <div class="info-box"><strong>Hub-side Swap:</strong> The Hub Manager / Battery Agent at the hub is also required to perform a corresponding swap-in on their end for the batteries exchanged by the driver. Both sides must complete for the record to close.</div>
+
+    <h2 class="section-h2">3.3 Transfer Batteries</h2>
+    <p>Transfer Batteries requests additional charged batteries to be brought out to the driver's location without handing back depleted ones. The hub manager dispatches a battery agent. The driver scans each received battery to check it in. The hub-side transfer flow is documented in Chapter 9.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-022-095.jpg" alt="Transfer Batteries — Request ID 547821, Sengera Hub, two batteries listed with battery type, Scan a Battery" loading="lazy">
+  <figcaption>Transfer batteries — driver scans each received battery to check in</figcaption>
+</figure>
+
+  </div>
+</div>
+
+<!-- CH4 — KILIKAWI SESSION FLOW -->
+<div class="chapter-page" id="page-ch4">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 4</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 04</div><h1>Kilikawi Session Flow</h1><p class="lead">Agri-tech service operations at farm locations. Each session is a single-farmer, single-asset event. Unlike aggregation trips, sessions require connectivity to end.</p></div>
+  <div class="doc-body">
+    <div class="info-box"><strong>Connectivity at Session End:</strong> Sessions store data locally while in progress. The End Session step requires a live connection to sync. When connectivity is restored after being offline, a "You're back online" screen confirms the driver can now end the session.</div>
+    <p>Session types: <span class="badge badge-teal">Tilling</span> · <span class="badge badge-teal">Milling</span> · <span class="badge badge-teal">Threshing</span> · <span class="badge badge-teal">Grinding</span> · <span class="badge badge-teal">Chaff Cutting</span> · <span class="badge badge-teal">Water Pumping</span> · <span class="badge badge-teal">Ploughing</span></p>
+
+    <h2 class="section-h2">4.1 Kilikawi Homepage</h2>
+    <p>The Kilikawi homepage shows today's sessions split into <strong>Upcoming Sessions</strong> and <strong>Completed Sessions</strong>. The Up Next card shows the next scheduled session — type, session ID, farmer name, and time. Start Session is active only on the day of the session.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-024-103.jpg" alt="Kilikawi homepage — 6 Upcoming, 2/6 Completed. Up Next: Tilling with Viola Thompson at 9:30am" loading="lazy">
+    <figcaption>Kilikawi homepage — Up Next card and session list</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-024-104.jpg" alt="Kilikawi session detail — session type, farmer, time, and hub" loading="lazy">
+    <figcaption>Session detail view</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">4.2 Asset Verification</h2>
+    <p>On tapping Start Session, the driver searches for and selects the agri-tech asset. The list is filtered by session type — for a tilling session, only tillers appear. On selection, a success screen confirms the asset ID and shows a Safety Checklist Form button to proceed.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-025-108.jpg" alt="Asset selection — tiller search showing KTW_602R, _567Y, _945R, _124G" loading="lazy">
+    <figcaption>Asset selection filtered by session type</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-025-109.jpg" alt="SUCCESS — KTWC_602R verified, Safety Checklist Form button" loading="lazy">
+    <figcaption>Asset verified — proceed to safety checklist</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">4.3 Asset Safety Checklist</h2>
+    <p>Each asset type has its own safety checklist configured independently from the trike checklist. For a tiller, mandatory items include Right Tillers, Clutch, Throttle, and On &amp; Off Switch. Optional checks include Level of Oil. An additional remarks field is available. The same pass/fail rules apply — failing a mandatory item blocks the session.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-026-113.jpg" alt="Tiller safety checklist — Right Tillers*, Clutch*, Throttle*, On & Off Switch*, Level of Oil (optional), Remarks" loading="lazy">
+    <figcaption>Asset-specific safety checklist</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-027-117.jpg" alt="TILLER IS SAFE TO USE — KTWC_602R ready, Slide To Accept Session" loading="lazy">
+    <figcaption>All items pass — Slide To Accept Session</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">4.4 Battery Start Energy Logging</h2>
+    <p>After the checklist passes, the driver logs the start energy for each battery assigned to the session. Values are pre-populated from smart charger data where available. Once TCU integration is complete, this step will be fully automated.</p>
+
+    <h2 class="section-h2">4.5 Farmer QR Scan and Session Details</h2>
+    <p>The driver scans the farmer's QR code using the Scan QR Code prompt. A <strong>VERIFIED FARMER</strong> banner confirms the match. The full session details card is then shown — farmer name, GPS coordinates, asset number, power source, start time, estimated area, cost per unit, and total estimated cost — before the driver taps Start Session.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-027-118.jpg" alt="Farmer QR scan — Tilling, Viola Thompson, 25th March, Scan QR Code prompt" loading="lazy">
+    <figcaption>Farmer QR scan to verify identity</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-028-122.jpg" alt="Ongoing Session — Tilling, Viola Thompson, session details, Started 06:36am, End Session, Land Area Measured: 67 Sq.M" loading="lazy">
+    <figcaption>Session underway — details and End Session</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">4.6 Land Area Measurement (Tilling and Ploughing Only)</h2>
+    <p>For tilling and ploughing sessions, the driver must measure the actual field area. The Measure Land Area card prompts the driver to start marking boundary points on a live GPS map. The driver physically walks the perimeter, tapping <strong>Mark Point</strong> at each corner. The app calculates the polygon area automatically. All other session types run directly between start and end with no mapping step.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-028-123.jpg" alt="Measure Land Area — Start marking points on the map, Start Measuring button" loading="lazy">
+    <figcaption>Land area measurement prompt</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-029-127.jpg" alt="GPS map — live Kisii map, 'You are here' pin, Mark Point and Complete buttons" loading="lazy">
+    <figcaption>GPS boundary marking — walk perimeter, tap at each corner</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">4.7 Ending a Session</h2>
+    <p>On tapping End Session, a three-step wizard captures the actual session outcomes.</p>
+    <table class="doc-table">
+      <tr><th>Field</th><th>Description</th></tr>
+      <tr><td>GPS Location</td><td>Latitude and longitude of the session site — entered manually or captured from device</td></tr>
+      <tr><td>Energy Used</td><td>Amount of energy consumed during the session</td></tr>
+      <tr><td>Actual Area / Weight / Volume</td><td>Real outcome — Sq.M for tilling/ploughing, Kg for milling/threshing/grinding, Litres for water pumping</td></tr>
+      <tr><td>Actual Cost per Unit</td><td>Rate actually charged — may differ from the estimate</td></tr>
+      <tr><td>Total Actual Cost</td><td>Auto-calculated: actual quantity × actual cost per unit</td></tr>
+      <tr><td>M-Pesa Reference</td><td>Payment transaction code from the farmer. Primary payment evidence — mandatory</td></tr>
+    </table>
+
+    <h2 class="section-h2">4.8 Session Summary and History</h2>
+    <p>After completing the end session wizard, the driver sees a full Session Summary — session type, duration, actual vs. estimated area, total cost, M-Pesa reference, farmer feedback, and agent concerns. The session also appears in the completed sessions history list, which is searchable by session type.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-031-134.jpg" alt="Session Summary — Tilling Completed, 06:36-10:00am, 67 Sq.M, 132.8 Ksh, MPESA 345THYJOFV" loading="lazy">
+    <figcaption>Session summary — actuals, M-Pesa reference, farmer feedback</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-031-135.jpg" alt="Completed sessions history — Tilling, Threshing, Water Pumping entries with Session Summary buttons" loading="lazy">
+    <figcaption>Completed sessions history list</figcaption>
+  </figure>
+</div>
+
+    <div class="info-box"><strong>Back Online:</strong> If connectivity was lost during the session, the app shows "You're back online — your saved data will automatically get synced" with an End Session button. The session can only be closed once the sync succeeds.</div>
+
+<figure class="doc-screenshot doc-screenshot-wide">
+  <img src="img-mobile/page-032-139.png" alt="Session Flow at a glance — end-to-end Kilikawi session sequence visualised" loading="lazy">
+  <figcaption>Kilikawi session flow at a glance — full sequence from start to summary</figcaption>
+</figure>
+
+  </div>
+</div>
+
+<!-- CH5 — DRIVER WALLET -->
+<div class="chapter-page" id="page-ch5">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 5</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 05</div><h1>Driver Wallet</h1><p class="lead">The driver's financial dashboard. Tracks three balance types and connects to the ERP system for all credit and deduction operations.</p></div>
+  <div class="doc-body">
+    <p>Three balance types are shown as prominent pills:</p>
+    <div class="field-list">
+      <div class="field-item"><div class="field-name">KSH Commission</div><div class="field-desc">Cash commission earned from trips and sessions. The last 10 commission credit entries are listed with date and trip reference.</div></div>
+      <div class="field-item"><div class="field-name">kWh Energy</div><div class="field-desc">Energy credits used to cover battery consumption during rental trips. Must be purchased before a rental trip can start.</div></div>
+      <div class="field-item"><div class="field-name">Rental Count</div><div class="field-desc">Rental day credits (e.g. 7/20 Rentals). At least 1 rental must be in wallet before booking a rental request.</div></div>
+    </div>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-033-143.jpg" alt="My Wallet — 67 KSH commission, 5.6 kWh energy (Purchase Energy link), 7/20 Rentals (Purchase Rentals link), commission history" loading="lazy">
+  <figcaption>Driver Wallet — three balance pills and commission history</figcaption>
+</figure>
+
+    <h2 class="section-h2">5.1 How Commission Is Used</h2>
+    <p>Commission can be applied in four ways. Two are managed entirely on the ERP system, with the updated balance reflecting back on Songa:</p>
+    <ul class="doc-ul">
+      <li><strong>Trike Lease Payments</strong> — Deducted on ERP; updated balance reflects on Songa.</li>
+      <li><strong>Encashment</strong> — Cash withdrawal managed on ERP; balance updated on Songa.</li>
+    </ul>
+    <p>Two are triggered from the mobile app and require ERP approval before the wallet updates:</p>
+    <ul class="doc-ul">
+      <li><strong>Purchase Rentals</strong> — Driver needs at least 1 rental in wallet before booking a rental trip.</li>
+      <li><strong>Purchase Energy</strong> — Driver needs sufficient kWh balance before a rental trip can start.</li>
+    </ul>
+
+    <h2 class="section-h2">5.2 Purchasing Rental Trips</h2>
+    <p>From the wallet, tapping <strong>Purchase Rentals</strong> opens the request form. The driver selects the quantity (1, 5, 7, or 10, or manual entry), confirms a mobile number for the M-Pesa push, sees the calculated cost, and selects Commission or M-Pesa as payment. A Pending Approval card is shown until the ERP processes it.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-034-148.jpg" alt="Rental Purchase Request — 1/5/7/10 quantity options, mobile number, Cost 50 KSH, Commission or M-Pesa, Send Request" loading="lazy">
+    <figcaption>Rental purchase form — quantity, payment method</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-034-149.jpg" alt="Rental Pending Approval — 10 trips, 50 KSH, M-Pesa mode, Cancel Request option" loading="lazy">
+    <figcaption>Pending approval state with cancel option</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">5.3 Purchasing Energy</h2>
+    <p>The energy purchase flow mirrors the rental purchase flow. The driver selects kWh needed (5, 10, 15, or 20, or manual entry), mobile number, cost, and payment method. A Pending Approval card is shown until the ERP credits the wallet.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-035-153.jpg" alt="Energy Purchase Request — 5/10/15/20 kWh options (10 selected), mobile number, Cost 50 KSH, Commission or M-Pesa" loading="lazy">
+    <figcaption>Energy purchase form — kWh quantity and payment method</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-035-154.jpg" alt="Energy Pending Approval — 10 kWh, 50 KSH, Commission mode, Cancel Request option" loading="lazy">
+    <figcaption>Energy pending approval with cancel option</figcaption>
+  </figure>
+</div>
+
+    <div class="warn-box"><strong>ERP Approval Gate:</strong> No wallet balance updates until the ERP approves the record. For M-Pesa payments, an STK push is triggered first. On approval, the balance credits immediately on Songa. If the ERP or STK push fails, status shows Failed and no credit is issued.</div>
+
+    <h2 class="section-h2">5.4 ERP Integration — Wallet Transactions</h2>
+    <p>The ERP system is the financial ledger. The following doctypes handle wallet transactions:</p>
+    <table class="doc-table">
+      <tr><th>ERP Doctype</th><th>Description</th></tr>
+      <tr><td>Driver Commission Ledger</td><td>Created weekly per driver. Transaction Type: Allocation or Deduction. Format: <code>COM-LEG-YYYY-XXXXX</code>. Must be Approved on ERP before commission credits on Songa.</td></tr>
+      <tr><td>Energy KWh</td><td>Created on energy purchase. Fields: Energy Qty (kWh), Transaction Type (Recharge), Amount (KES), linked Commission Ledger or M-Pesa reference.</td></tr>
+      <tr><td>Rental Days</td><td>Created on rental purchase. Fields: No. of Days, Transaction Type (Recharge), Amount (KES), linked M-Pesa reference if M-Pesa payment.</td></tr>
+      <tr><td>M-Pesa Express Request</td><td>Created when M-Pesa is selected. Fields: Phone Number, Payment Gateway (STK Push), Amount (KES), Reference Doctype and Name, Status.</td></tr>
+    </table>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-036-158.png" alt="ERP Songa App Integration workspace — Driver Commission Ledger, Energy KWh, Rental Days, STK Push records" loading="lazy">
+    <figcaption>ERP workspace overview — all wallet doctypes</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-037-162.png" alt="Commission Ledger list — COM-LEG records with Approved and Pending statuses" loading="lazy">
+    <figcaption>Commission Ledger list — Approved/Pending/Deduction states</figcaption>
+  </figure>
+</div>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-037-163.png" alt="Commission Ledger detail — COM-LEG-2026-00204 Pending, Actions: Approve/Reject/Help, Amount KES 5,000" loading="lazy">
+    <figcaption>Commission Ledger detail — Approve/Reject actions</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-038-169.png" alt="Energy KWh list — Completed and Failed entries" loading="lazy">
+    <figcaption>Energy KWh records — Completed and Failed states</figcaption>
+  </figure>
+</div>
+
+  </div>
+</div>
+
+<!-- CH6 — RENTAL FLOW -->
+<div class="chapter-page" id="page-ch6">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 6</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 06</div><h1>Rental Flow</h1><p class="lead">Allows registered Songa drivers to rent a trike for independent use. Two wallet conditions must be met before a rental can proceed.</p></div>
+  <div class="doc-body">
+    <div class="info-box"><strong>Wallet Gates:</strong> Gate 1 — the driver must have at least 1 rental in their wallet before the booking form opens. Gate 2 — after booking is confirmed, the driver must have sufficient kWh energy balance before Start Trip activates.</div>
+
+    <h2 class="section-h2">6.1 Rentals Homepage</h2>
+    <p>The Rentals tab has two options: <strong>Book Your Trike</strong> to create a new booking request, and <strong>View Completed Rentals</strong> for history. If a request is pending or a trip is active, the homepage updates to show that state instead of the booking card.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-039-176.jpg" alt="Rentals homepage — Book Your Trike (from 200 KSH/day) and View Completed Rentals options" loading="lazy">
+  <figcaption>Rentals homepage — book or view history</figcaption>
+</figure>
+
+    <h2 class="section-h2">6.2 Booking a Rental</h2>
+    <p>Tapping Book Your Trike opens the form. The driver sets the pickup hub, pickup date and time, and expected run (20, 40, 60, or 80 km). Pricing details show the standard daily rate and energy component. On Send, the request goes to the hub manager.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-040-180.jpg" alt="Book Your Trike — Magena Agr-E-Hub, 29 Sep 2:00pm, Expected Run 20km, 200 KSH + 2 kWh pricing shown" loading="lazy">
+    <figcaption>Booking form — hub, date/time, expected run, pricing</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-040-181.jpg" alt="Rental request sent successfully — teal confirmation screen" loading="lazy">
+    <figcaption>Confirmation screen after submitting request</figcaption>
+  </figure>
+</div>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-041-185.jpg" alt="LOW ENERGY IN WALLET — red full-screen warning, 1.6 kWh shown. Driver must purchase energy before proceeding." loading="lazy">
+  <figcaption>Low energy gate — full-screen block until energy is purchased</figcaption>
+</figure>
+
+    <h2 class="section-h2">6.3 Request States</h2>
+    <table class="doc-table">
+      <tr><th>Status</th><th>Description</th></tr>
+      <tr><td><span class="badge badge-amber">Pending Approval</span></td><td>Request submitted, awaiting hub manager review. Details shown, Cancel Request available.</td></tr>
+      <tr><td><span class="badge badge-green">Trip Confirmed</span></td><td>Hub manager accepted and assigned a trike. Start Trip button active.</td></tr>
+      <tr><td><span class="badge badge-red">Rejected</span></td><td>Request declined. A new request can be submitted.</td></tr>
+    </table>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-042-189.jpg" alt="Pending Approval state — request details with Cancel Request option" loading="lazy">
+    <figcaption>Pending approval — cancel available</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-042-190.jpg" alt="Trip Confirmed — assigned trike details, Start Trip button active" loading="lazy">
+    <figcaption>Trip confirmed — Start Trip now active</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">6.4 Starting a Rental Trip</h2>
+    <p>On tapping Start Trip, the driver goes through the same pre-trip verification steps as an aggregation trip:</p>
+    <ul class="doc-ul">
+      <li><strong>Trike Verification</strong> — Scan QR or manually select the assigned trike (same search UI as aggregation trips).</li>
+      <li><strong>Safety Checklist</strong> — Same trike checklist — all mandatory item rules apply.</li>
+      <li><strong>Battery Start Energy</strong> — Log start energy per battery. Pre-populated from dispatch records where available.</li>
+    </ul>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-043-194.jpg" alt="Battery start energy for rental — 3 batteries: 2.2, 2.1, 1.8 kWh pre-populated, Continue" loading="lazy">
+  <figcaption>Battery start energy — pre-populated from charger data</figcaption>
+</figure>
+
+    <h2 class="section-h2">6.5 Ongoing Rental Trip</h2>
+    <p>The ongoing rental screen shows trip details and two actions: <strong>End Trip</strong> and <strong>Get Help</strong>. Get Help links to the same SOS flow — Trike Breakdown or Swap Batteries. Energy is not deducted at booking or trip start; the actual charge is applied after the trip ends based on real battery consumption.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-044-198.jpg" alt="Ongoing rental — Trip Started! Details shown. Hub receiver must check trike condition and add signature to end. End Trip and Get Help buttons." loading="lazy">
+  <figcaption>Ongoing rental — hub receiver signature required before ending</figcaption>
+</figure>
+
+    <h2 class="section-h2">6.6 Digital Signature — Trip End</h2>
+    <p>Before the trip can be ended, a designated hub receiver must physically inspect the trike and sign off on the mobile app. The Digital Signature screen captures the receiver's name (a dropdown of registered hub personnel — not a free text field), a condition note, and a touch-based signature. The named receiver automatically receives a web notification and email on submission.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-045-202.jpg" alt="Digital Signature — Receiver: Phyllis (dropdown), Feedback: No scratches or dents seen, drawn signature, Save & Continue" loading="lazy">
+  <figcaption>Digital signature — receiver selected from dropdown, condition note, touch signature</figcaption>
+</figure>
+
+    <h2 class="section-h2">6.7 Rental Trip Summary</h2>
+    <p>The completed rental summary shows overall trip metrics and three tabs with full detail.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-046-206.jpg" alt="Rental Summary — Trike tab: 2kWh standard, 1.5kWh consumed, 133km total, KTW_602R odometer, Safety Checklist, Digital Signature" loading="lazy">
+    <figcaption>Rental summary — trike tab with odometer and signature</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-046-207.jpg" alt="Rental Summary — Battery tab: per-battery Start Energy, End Energy, Consumed (2.2→0.2=2.0, 2.1→0.2=1.9, 1.8→0.2=1.6)" loading="lazy">
+    <figcaption>Rental summary — battery tab with energy consumed per battery</figcaption>
+  </figure>
+</div>
+
+    <table class="doc-table">
+      <tr><th>Tab</th><th>Content</th></tr>
+      <tr><td>Trike</td><td>Registration number, odometer start/end, total distance, kWh consumed vs. standard, Safety Checklist link, Digital Signature, trike changes during trip</td></tr>
+      <tr><td>Battery</td><td>Per-battery: Start Energy, End Energy, Energy Consumed (kWh)</td></tr>
+    </table>
+
+  </div>
+</div>
+
+<!-- CH7 — PROFILE AND TIME-OFF -->
+<div class="chapter-page" id="page-ch7">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 7</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 07</div><h1>Profile &amp; Time-Off</h1><p class="lead">The profile panel is accessed from the avatar icon in the top right of the homepage. It contains wallet access, time-off management, password reset, and logout.</p></div>
+  <div class="doc-body">
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-048-215.jpg" alt="Profile menu — Brian William, My Wallet, My Time-Offs, Reset Password, Logout" loading="lazy">
+  <figcaption>Profile panel — My Wallet, My Time-Offs, Reset Password, Logout</figcaption>
+</figure>
+
+    <div class="field-list">
+      <div class="field-item"><div class="field-name">My Wallet</div><div class="field-desc">Direct link to the Driver Wallet screen (Chapter 5). Accessible from the profile panel without navigating through the main tabs.</div></div>
+      <div class="field-item"><div class="field-name">My Time-Offs</div><div class="field-desc">Time-off overview and request management (see below).</div></div>
+      <div class="field-item"><div class="field-name">Reset Password</div><div class="field-desc">Allows the driver to change their login password directly from the app.</div></div>
+      <div class="field-item"><div class="field-name">Logout</div><div class="field-desc">Signs the driver out of the app session.</div></div>
+    </div>
+
+    <h2 class="section-h2">7.1 Time-Off Overview</h2>
+    <p>My Time-Offs shows days available this month as a fraction (e.g. 1/4), a <strong>New Request</strong> button, and all submitted requests with their status: <span class="badge badge-teal">Approved</span> · <span class="badge badge-amber">Pending</span> · <span class="badge badge-red">Rejected</span>.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-049-219.jpg" alt="Time-Off Overview — 1/4 available this month. 29 Jan Approved, 10 Feb Pending, 24 Mar Rejected" loading="lazy">
+    <figcaption>Time-off history — status colour-coded per request</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-049-220.jpg" alt="New time-off request — Start Date, End Date, optional Note, 'You are requesting 1 day off', Send Request" loading="lazy">
+    <figcaption>New time-off request — dates and optional note</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">7.2 Approval Flow</h2>
+    <p>On submission, the request appears in the hub manager's Driver Calendar on the web app as a Pending Request. The hub manager must reassign any conflicting trips before approving. The driver is notified on approval or rejection.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-050-224.jpg" alt="Time-off Approved state — teal confirmation" loading="lazy">
+    <figcaption>Approved time-off state</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-050-225.jpg" alt="Time-off Pending state — amber, awaiting hub manager action" loading="lazy">
+    <figcaption>Pending time-off — awaiting hub manager action</figcaption>
+  </figure>
+</div>
+
+    <div class="info-box"><strong>Conflict handling:</strong> If trips are assigned during the requested leave period, the hub manager sees a conflict warning with the number of affected trips. A Re-assign Items modal requires trip reassignment before approval can be confirmed — preventing coverage gaps.</div>
+
+  </div>
+</div>
+
+<!-- CH8 — BATTERY AGENT HUB MANAGEMENT AND CHARGING -->
+<div class="chapter-page" id="page-ch8">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 8</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 08</div><h1>Hub Management &amp; Charging</h1><p class="lead">The Battery Agent / Hub Manager app — a dedicated mobile interface for managing batteries at hub stations. This chapter covers the Hubs tab and the battery charging flow.</p></div>
+  <div class="doc-body">
+    <p>The Battery Agent app uses three-tab navigation: <strong>Hubs</strong> (battery management and charging) · <strong>Transfer Requests</strong> (battery movement) · <strong>Kilikawi</strong> (session visibility).</p>
+
+    <h2 class="section-h2">8.1 Hubs Tab — Home Screen</h2>
+    <p>The home screen opens with "Jambo!" and an <strong>Asset Overview</strong> showing total Batteries and Trikes across all hub stations. A <strong>My Hubs</strong> section lists assigned hubs. An <strong>All Hubs</strong> section shows all hubs. Each hub card shows today's Batteries, Trikes, and Trips Scheduled counts with a View All Batteries link.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-051-229.jpg" alt="Battery Agent home — Jambo!, 640 batteries / 305 trikes across all hubs. My Hubs: Kisii Main Hub (190 batteries, 53 trikes, 21 trips). All Hubs section shows 5 hubs." loading="lazy">
+  <figcaption>Battery Agent home — asset overview, My Hubs, and All Hubs</figcaption>
+</figure>
+
+    <h2 class="section-h2">8.2 Battery Listing</h2>
+    <p>Tapping View All Batteries opens the hub's battery list. Total batteries available is shown in the header. Each row shows Registration Number, charge percentage (colour-coded icon), and status: <span class="badge badge-amber">Charging</span> or <span class="badge badge-teal">Available</span>. The list is searchable by Battery ID with a QR scan option.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-052-233.jpg" alt="Battery listing — Kisii Main Hub, 56 total. KSC0248 85% Charging, KSC6021 24% Charging, KSC4563 85% Available..." loading="lazy">
+  <figcaption>Battery listing — colour-coded charge levels and status per battery</figcaption>
+</figure>
+
+    <h2 class="section-h2">8.3 Battery Detail and Charging</h2>
+    <p>Tapping a battery opens its detail page showing the current charge prominently, Battery Type, Charger Type, and — for IoT-connected batteries — the Charger ID and Charger Connection status (Active or Inactive). The agent taps <strong>Start Charging</strong> to begin and <strong>End Charging</strong> to close the session.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-053-237.jpg" alt="KSC6021 at 15% — red battery icon, Acceleron / Canbus, Charger CAN_3521 Active, Start Charging" loading="lazy">
+    <figcaption>Battery at 15% — charger connected, Start Charging</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-053-238.jpg" alt="KSC6021 at 99% — full battery icon, CAN_3521 Active, End Charging" loading="lazy">
+    <figcaption>Battery fully charged — End Charging</figcaption>
+  </figure>
+</div>
+
+    <h3 class="section-h3">Smart vs. Non-Smart Batteries</h3>
+    <div class="field-list">
+      <div class="field-item"><div class="field-name">IoT-Connected (Smart)</div><div class="field-desc">Start Charging triggers automatic SOC, voltage, and temperature data flow from the IoT platform — no manual entry required. If the battery is physically disconnected from the charger at any time, the disconnection reflects on the platform in real time.</div></div>
+      <div class="field-item"><div class="field-name">Non-Smart</div><div class="field-desc">The agent manually enters the charge percentage at start and end. No live telemetry feed.</div></div>
+    </div>
+
+<figure class="doc-screenshot doc-screenshot-wide">
+  <img src="img-mobile/page-054-242.png" alt="Battery charging flow at a glance — from battery selection to End Charging" loading="lazy">
+  <figcaption>Battery charging flow at a glance — full sequence for smart and non-smart batteries</figcaption>
+</figure>
+
+  </div>
+</div>
+
+<!-- CH9 — BATTERY TRANSFER FLOW -->
+<div class="chapter-page" id="page-ch9">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 9</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 09</div><h1>Battery Transfer Flow</h1><p class="lead">Battery transfers are initiated on the web by a hub manager. The battery agent executes the physical transfer from the Transfer Requests tab on the mobile app.</p></div>
+  <div class="doc-body">
+    <p>Two transfer types exist:</p>
+    <div class="field-list">
+      <div class="field-item"><div class="field-name">Transfer</div><div class="field-desc">Check-Out only from the source hub. The receiving hub does the Check-In to close the record.</div></div>
+      <div class="field-item"><div class="field-name">Swap</div><div class="field-desc">Two-way exchange — both the Check-Out of charged batteries and the Check-In of depleted ones must be completed before the record closes.</div></div>
+    </div>
+    <div class="info-box"><strong>Two Sources:</strong> Transfer requests come from two places — hub-to-hub requests initiated on the web app, or mid-trip Battery Ambulance SOS requests from drivers. Both land in the same Transfer Requests queue.</div>
+
+    <h2 class="section-h2">9.1 Transfer Requests Overview</h2>
+    <p>The Transfer Requests tab shows today's <strong>Pending Transfers</strong> (yellow KPI) and <strong>Completed Transfers</strong> (teal KPI). Each pending card shows: Request ID, transfer direction, Type badge (Check-Out / Check-In / Swap), battery count, and an action button. Completed transfers split into For Hubs and For Trips.</p>
+
+    <h2 class="section-h2">9.2 Check-Out Flow — Sending Batteries</h2>
+    <p>Tapping <strong>Check-Out Batteries</strong> opens the Check-Out screen. Expected batteries are listed by ID, Battery Type, and Charger Type — initially numbered (not yet scanned). The agent scans each battery by QR or enters the ID manually. Once all are confirmed, <strong>Initiate Transfer</strong> marks them as In Transit.</p>
+
+    <h2 class="section-h2">9.3 Check-In Flow — Receiving Batteries</h2>
+    <p>At the receiving hub, the agent taps <strong>Check-In Batteries</strong>. The expected batteries are listed. The agent scans each one — each gets a green tick when confirmed. Once all are scanned, <strong>Complete Transfer</strong> closes the record and moves the batteries to Available at the receiving hub.</p>
+
+<div class="doc-screenshot-grid-3">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-057-254.jpg" alt="Check-In Batteries — both batteries numbered (not yet scanned), Scan Batteries button" loading="lazy">
+    <figcaption>Both batteries pending scan</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-057-255.jpg" alt="Scanning — KSC9451 ticked (scanned), KSC6078 still numbered, Scan Batteries" loading="lazy">
+    <figcaption>First battery confirmed</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-057-256.jpg" alt="Both confirmed — KSC9451 ✓ and KSC6078 ✓, Complete Transfer enabled" loading="lazy">
+    <figcaption>All confirmed — Complete Transfer</figcaption>
+  </figure>
+</div>
+
+    <h2 class="section-h2">9.4 Swap Flow</h2>
+    <p>A swap has two sides. The Check-Out side sends charged batteries to the driver or other hub. The Check-In side receives depleted batteries in return. Both must be completed before the swap record closes. The pending card shows "Exchange with Trip [ID]" for mid-trip ambulance swaps, or the hub name for hub-to-hub swaps.</p>
+
+<div class="doc-screenshot-grid">
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-058-260.jpg" alt="Swap Check-Out — KSC9451 and KSC6078 listed, Scan a Battery / Cancel" loading="lazy">
+    <figcaption>Swap check-out — scan batteries going out</figcaption>
+  </figure>
+  <figure class="doc-screenshot">
+    <img src="img-mobile/page-058-261.jpg" alt="Swap Check-In — Enter or select battery, KSC9451, Add for Check-in / Cancel" loading="lazy">
+    <figcaption>Swap check-in — scan batteries coming back</figcaption>
+  </figure>
+</div>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-059-265.jpg" alt="Completed Transfers / For Hubs — Today: ID 124567 Transfer to Sengera hub, Check-Out, 3 batteries. Yesterday: same." loading="lazy">
+  <figcaption>Completed transfers — For Hubs and For Trips history</figcaption>
+</figure>
+
+    <table class="doc-table">
+      <tr><th>Status / Type</th><th>Description</th></tr>
+      <tr><td><span class="badge badge-amber">Check-Out</span></td><td>Batteries dispatched from the source hub. Only a Check-Out step is needed at the source for one-way transfers.</td></tr>
+      <tr><td><span class="badge badge-blue">Transfer Initiated</span></td><td>Batteries dispatched and In Transit. Awaiting Check-In at the receiving hub.</td></tr>
+      <tr><td><span class="badge badge-teal">Check-In</span></td><td>Batteries arriving at the receiving hub. Agent scans each to confirm receipt and close the record.</td></tr>
+      <tr><td><span class="badge badge-gray">Swap</span></td><td>Two-way exchange. Check-Out of charged batteries and Check-In of depleted ones — both must complete.</td></tr>
+    </table>
+
+  </div>
+</div>
+
+<!-- CH10 — IOT PLATFORM REFERENCE -->
+<div class="chapter-page" id="page-ch10">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 10</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 10</div><h1>IoT Platform Reference</h1><p class="lead">The IoT platform is the data broker between all connected hardware — chargers, hub inverters, and trike TCUs — and the Songa backend. Hub managers and technical staff interact with it directly for real-time diagnostics and configuration.</p></div>
+  <div class="doc-body">
+
+    <h2 class="section-h2">10.1 Hub Station Dashboard</h2>
+    <p>The hub-level dashboard shows Hub Serial Number, Hub Mains State (1 = connected), and Hub Battery SOC at the top, followed by Provision Good/Warning status circles. A grid of up to 30 Node State indicators shows every charger slot: <span style="color:#1D9E75;font-weight:600">green</span> = active and healthy, dark grey = inactive, dark red = error. Specific error labels: Provision Error and Address Error.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-060-269.jpg" alt="Hub Station 1 — Serial 3793811903, Mains State 1, Battery SOC 100%. Provision Good/Warning. 30 node grid: 10 active (green), 18 inactive, 2 error states." loading="lazy">
+  <figcaption>Hub IoT dashboard — node grid with active (green), inactive (dark), and error (red) states</figcaption>
+</figure>
+
+    <h2 class="section-h2">10.2 Inverter Detail View</h2>
+    <p>Drilling into the hub inverter shows: Inverter Serial Number, Battery Voltage, SOC, Battery Current, Battery Capacity, Temperature, SOH, Fault Status, Inverter Frequency, and Load Frequency. Three time-series charts cover the last 5 hours: Inverter Voltage, Current, and Power across three phases (A, B, C). This telemetry underlies the Hub Energy Management module on the Songa web app.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-061-273.jpg" alt="Inverter 1 — Jinko Station: Battery 55V, 100% SOC, -3A current. Three-phase voltage, current, and power time-series charts." loading="lazy">
+  <figcaption>Inverter detail — live voltage, current, SOC, and three-phase time-series charts</figcaption>
+</figure>
+
+    <h2 class="section-h2">10.3 Node Detail View (Charger)</h2>
+    <p>Each charger node view shows all real-time charging telemetry. The critical linking field is the <strong>BMS Serial Number</strong> — the unique ID of the battery physically connected. The platform uses this to link live battery data to the correct Songa battery record. Charger State, C MosFETs, and D MosFETs are togglable from this view.</p>
+
+<figure class="doc-screenshot">
+  <img src="img-mobile/page-061-274.jpg" alt="Node 1 — BMS Serial 506237F2E000127, 22 charge cycles, 3 kWh capacity, 100% SOC, 4% SOH. Charger State ON, C MosFETs ON, D MosFETs ON." loading="lazy">
+  <figcaption>Charger node telemetry — BMS serial number, SOC, SOH, cell difference, MOSFET states</figcaption>
+</figure>
+
+    <table class="doc-table">
+      <tr><th>Node Metric</th><th>Description</th></tr>
+      <tr><td>BMS Serial Number</td><td>Unique battery identifier as reported by its BMS. Links this charger node to the correct Songa battery record.</td></tr>
+      <tr><td>Setpoint Charging Voltage / Current</td><td>Target voltage (mV) and current (mA) the charger is configured to deliver</td></tr>
+      <tr><td>Charging Voltage / Current</td><td>Actual voltage and current being delivered at this moment</td></tr>
+      <tr><td>Battery Voltage / Current</td><td>Live readings from the connected battery's BMS</td></tr>
+      <tr><td>C MosFETs / D MosFETs</td><td>Charge and discharge MOSFET states — 1 = open. Controllable from this dashboard.</td></tr>
+      <tr><td>Cell Difference</td><td>Voltage spread between highest and lowest cells (mV). A growing value indicates cell imbalance.</td></tr>
+      <tr><td>Battery Cycles</td><td>Total charge/discharge cycles — primary long-term battery health indicator</td></tr>
+      <tr><td>Battery SOC</td><td>State of Charge — current charge level as a percentage</td></tr>
+      <tr><td>Battery SOH</td><td>State of Health — remaining capacity relative to original specification</td></tr>
+      <tr><td>Charger State</td><td>ON/OFF toggle — controls active charging. Operable from this dashboard.</td></tr>
+    </table>
+
+  </div>
+</div>
+
+<!-- CH11 — GLOSSARY -->
+<div class="chapter-page" id="page-ch11">
+  <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 11</div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 11</div><h1>Glossary</h1><p class="lead">Key terms used across both mobile app variants and this documentation.</p></div>
+  <div class="doc-body">
+    <table class="doc-table">
+      <tr><th>Term</th><th>Definition</th></tr>
+      <tr><td>Aggregation</td><td>Dairy collection operation — driver collects from farmers across stops and delivers to off-takers.</td></tr>
+      <tr><td>Battery Ambulance</td><td>Emergency mid-trip battery swap or transfer triggered via the SOS button.</td></tr>
+      <tr><td>BMS</td><td>Battery Management System — electronics within each battery reporting SOC, voltage, current, and temperature.</td></tr>
+      <tr><td>BMS Serial Number</td><td>Unique battery ID reported by the BMS. Used to link a charger Node to the correct Songa battery record.</td></tr>
+      <tr><td>Canister / Crate</td><td>Physical containers registered as Songa assets with QR codes. Scanned at trip start and linked per farmer during milk collection.</td></tr>
+      <tr><td>End Energy</td><td>Battery energy (kWh) at reconnection to charger after an operation. Used to calculate energy consumed.</td></tr>
+      <tr><td>Geofence</td><td>200-metre GPS boundary used to validate driver arrival at each stop. Warning issued if outside, but driver can proceed.</td></tr>
+      <tr><td>IoT Platform</td><td>Thingsboard instance acting as data broker between hardware (TCUs, HCUs, chargers) and the Songa backend.</td></tr>
+      <tr><td>Kilikawi</td><td>Brand name for Songa's agri-tech services. Also the session operation type and the app mode for agents.</td></tr>
+      <tr><td>Login As</td><td>Dropdown on the mobile login screen that sets the default homepage — Aggregation, Kilikawi, or Rental. Does not restrict access to other functions.</td></tr>
+      <tr><td>M-Pesa Reference</td><td>Payment transaction code from a farmer paying for a Kilikawi session. Mandatory at session end.</td></tr>
+      <tr><td>Node</td><td>IoT platform term for a smart charger unit at a hub station.</td></tr>
+      <tr><td>Off-Taker</td><td>A buyer of agricultural produce — typically a dairy or processing facility. Receives delivery from drivers.</td></tr>
+      <tr><td>QR Code</td><td>Assigned to all major entities: trikes, batteries, farmers, canisters, assets. Used for identification in all mobile flows.</td></tr>
+      <tr><td>Receipt ID</td><td>Reference number on the physical receipt from an off-taker. Required for the receipt upload step at delivery.</td></tr>
+      <tr><td>Session</td><td>A single-farmer, single-asset agri-tech service operation (Kilikawi).</td></tr>
+      <tr><td>Slide to Accept</td><td>Swipe-based confirmation at critical decision points — accepting a trip or session after passing the safety checklist.</td></tr>
+      <tr><td>SOC</td><td>State of Charge — current battery charge level as a percentage.</td></tr>
+      <tr><td>SOH</td><td>State of Health — remaining battery capacity relative to original specification. Degrades over charge cycles.</td></tr>
+      <tr><td>Spoilt Milk</td><td>Milk found undeliverable during a trip. Reported by the driver with weight and cause. Deducted from driver commission at weekly settlement.</td></tr>
+      <tr><td>Start Energy</td><td>Battery energy (kWh) at disconnection from charger before an operation. Used as baseline for consumption calculation.</td></tr>
+      <tr><td>TCU</td><td>Trike Control Unit — onboard smart computer transmitting real-time GPS and BMS data to the IoT platform.</td></tr>
+      <tr><td>USSD</td><td>Unstructured Supplementary Service Data — allows platform interaction via <code>*384*385#</code> without a smartphone.</td></tr>
+    </table>
+  </div>
+</div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+<script>
+const pages={home:document.getElementById('page-home'),ch1:document.getElementById('page-ch1'),ch2:document.getElementById('page-ch2'),ch3:document.getElementById('page-ch3'),ch4:document.getElementById('page-ch4'),ch5:document.getElementById('page-ch5'),ch6:document.getElementById('page-ch6'),ch7:document.getElementById('page-ch7'),ch8:document.getElementById('page-ch8'),ch9:document.getElementById('page-ch9'),ch10:document.getElementById('page-ch10'),ch11:document.getElementById('page-ch11')};
+
+function showPage(id,el){
+  Object.values(pages).forEach(p=>p.classList.remove('active'));
+  if(pages[id])pages[id].classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el){el.classList.add('active');}
+  else{const m=document.querySelector('.nav-item[data-page="'+id+'"]');if(m)m.classList.add('active');}
+  window.scrollTo(0,0);
+}
+
+const searchIndex=[];
+Object.entries(pages).forEach(([id,el])=>{
+  if(id==='home')return;
+  const title=el.querySelector('h1')?el.querySelector('h1').textContent:'';
+  const chTag=el.querySelector('.chapter-tag')?el.querySelector('.chapter-tag').textContent:'';
+  searchIndex.push({id,title,chTag,text:el.textContent});
+});
+
+function doSearch(q){
+  if(!q||q.length<2)return[];
+  const lq=q.toLowerCase();
+  const results=[];
+  searchIndex.forEach(item=>{
+    const ti=item.title.toLowerCase().includes(lq);
+    const tx=item.text.toLowerCase().indexOf(lq);
+    if(ti||tx>=0){
+      let preview='';
+      if(tx>=0){const s=Math.max(0,tx-40);const e=Math.min(item.text.length,tx+90);preview='…'+item.text.substring(s,e).replace(/\s+/g,' ').trim()+'…';}
+      results.push({id:item.id,title:item.title,chTag:item.chTag,preview});
+    }
+  });
+  return results.slice(0,8);
+}
+
+const si=document.getElementById('searchInput');
+const sr=document.getElementById('search-results');
+si.addEventListener('input',function(){
+  const q=this.value.trim();
+  const res=doSearch(q);
+  if(!q||q.length<2){sr.classList.remove('open');return;}
+  if(res.length===0){sr.innerHTML='<div class="sr-empty">No results for "'+q+'"</div>';}
+  else{sr.innerHTML=res.map(r=>'<div class="sr-item" onclick="showPage(\''+r.id+'\',null);sr.classList.remove(\'open\');si.value=\'\'"><div class="sr-item-chapter">'+r.chTag+'</div><div class="sr-item-title">'+r.title+'</div><div class="sr-item-preview">'+r.preview+'</div></div>').join('');}
+  sr.classList.add('open');
+});
+document.addEventListener('click',function(e){if(!sr.contains(e.target)&&e.target!==si)sr.classList.remove('open');});
+
+const ssi=document.getElementById('sidebarSearchInput');
+ssi.addEventListener('input',function(){
+  const q=this.value.trim().toLowerCase();
+  document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
+    item.style.display=(!q||item.textContent.toLowerCase().includes(q))?'':'none';
+  });
+});
+
+document.addEventListener('keydown',function(e){
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();si.focus();si.select();}
+});
+</script>
+</body>
+</html>

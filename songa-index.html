@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Songa Mobility — Documentation Hub</title>
+<style>
+:root {
+  --navy:       #075155;
+  --navy-dark:  #053d40;
+  --navy-mid:   #0a6268;
+  --teal:       #1D9E75;
+  --teal-light: #E1F5EE;
+  --teal-mid:   #0F6E56;
+  --amber:      #EF9F27;
+  --white:      #fff;
+  --text:       #1a2b2c;
+  --text-light: #4a6568;
+  --border:     #daeae8;
+  --bg:         #f5f9f9;
+  --font-ui:    -apple-system, 'Segoe UI', sans-serif;
+  --font-body:  Georgia, 'Times New Roman', serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── TOP NAV ── */
+.topnav {
+  background: var(--navy);
+  padding: 0 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,.2);
+}
+.topnav-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.topnav-logo-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  object-position: left center;
+  display: block;
+}
+.topnav-tag {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--teal);
+  background: rgba(29,158,117,.15);
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(150deg, var(--navy) 0%, var(--navy-mid) 55%, var(--teal-mid) 100%);
+  padding: 72px 48px 64px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(29,158,117,.18) 0%, transparent 70%);
+}
+.hero-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.8);
+  margin-bottom: 22px;
+}
+.hero-eyebrow::before { content: '●'; color: var(--teal); font-size: 8px; }
+.hero h1 {
+  font-size: 42px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  letter-spacing: -.5px;
+}
+.hero h1 em {
+  font-style: normal;
+  color: #6ee7c0;
+}
+.hero-sub {
+  font-family: var(--font-ui);
+  font-size: 17px;
+  color: rgba(255,255,255,.7);
+  line-height: 1.6;
+  max-width: 620px;
+  margin-bottom: 36px;
+}
+.hero-stats {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.stat {
+  font-family: var(--font-ui);
+}
+.stat-num {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 12px;
+  color: rgba(255,255,255,.5);
+  margin-top: 3px;
+  letter-spacing: .04em;
+}
+.stat-divider {
+  width: 1px;
+  background: rgba(255,255,255,.15);
+  align-self: stretch;
+}
+
+/* ── MAIN CONTENT ── */
+.main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 52px 48px 80px;
+}
+
+.section-label {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--teal-mid);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── DOC CARDS ── */
+.doc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 52px;
+}
+
+.doc-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: all .2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.doc-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--teal) 0%, var(--teal-mid) 100%);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.doc-card:hover {
+  border-color: var(--teal);
+  box-shadow: 0 8px 32px rgba(7,81,85,.12);
+  transform: translateY(-3px);
+}
+.doc-card:hover::before { opacity: 1; }
+
+.card-icon-wrap {
+  width: 52px;
+  height: 52px;
+  background: var(--teal-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin-bottom: 18px;
+  transition: background .2s;
+}
+.doc-card:hover .card-icon-wrap {
+  background: linear-gradient(135deg, var(--teal) 0%, var(--teal-mid) 100%);
+}
+
+.card-type {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--teal-mid);
+  margin-bottom: 6px;
+}
+.card-title {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 10px;
+  line-height: 1.25;
+}
+.card-desc {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.6;
+  flex: 1;
+  margin-bottom: 22px;
+}
+.card-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.meta-tag {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 10px;
+  background: var(--teal-light);
+  color: var(--teal-mid);
+}
+.card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--teal-mid);
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  transition: gap .2s;
+}
+.card-cta::after { content: '→'; transition: transform .2s; }
+.doc-card:hover .card-cta { gap: 10px; }
+.doc-card:hover .card-cta::after { transform: translateX(3px); }
+
+/* ── QUICK REFERENCE ── */
+.quick-ref {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px 36px;
+  margin-bottom: 52px;
+}
+.quick-ref h2 {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 20px;
+}
+.qr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.qr-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-radius: 8px;
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background .15s;
+  border: 1px solid transparent;
+}
+.qr-item:hover { background: var(--teal-light); border-color: var(--border); }
+.qr-item-icon { font-size: 16px; }
+.qr-item-text { font-weight: 500; }
+.qr-item-arrow { margin-left: auto; color: var(--text-light); font-size: 12px; }
+
+/* ── ABOUT SECTION ── */
+.about-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 52px;
+}
+.about-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 32px;
+}
+.about-card h3 {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.about-card p {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.7;
+}
+.about-card ul {
+  list-style: none;
+  margin-top: 12px;
+}
+.about-card li {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.6;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.about-card li:last-child { border-bottom: none; }
+.about-card li::before { content: '→'; color: var(--teal); font-size: 11px; flex-shrink: 0; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--navy);
+  padding: 28px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.footer-brand {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: rgba(255,255,255,.5);
+}
+.footer-brand strong { color: rgba(255,255,255,.8); }
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+.footer-links a {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: rgba(255,255,255,.45);
+  text-decoration: none;
+  transition: color .15s;
+}
+.footer-links a:hover { color: rgba(255,255,255,.8); }
+
+@media (max-width: 720px) {
+  .hero { padding: 48px 24px; }
+  .hero h1 { font-size: 28px; }
+  .main { padding: 36px 24px 60px; }
+  .topnav { padding: 0 24px; }
+  .about-section { grid-template-columns: 1fr; }
+  .hero-stats { gap: 20px; }
+  footer { padding: 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="topnav-brand">
+    <img class="topnav-logo-img" src="img/Songa_logo_white_web.png" alt="Songa Mobility">
+  </div>
+  <div class="topnav-tag">Platform Docs</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Documentation Hub</div>
+    <h1>Everything you need to<br>build with <em>Songa</em></h1>
+    <p class="hero-sub">
+      Comprehensive documentation for the Songa Mobility platform — covering the web app,
+      admin tools, client onboarding, REST API, and mobile driver experience.
+    </p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">5</div>
+        <div class="stat-label">Documentation guides</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <div class="stat-num">22</div>
+        <div class="stat-label">API modules</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <div class="stat-num">105+</div>
+        <div class="stat-label">API endpoints</div>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <div class="stat-num">Phase 9</div>
+        <div class="stat-label">Current version</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- DOC CARDS -->
+  <div class="section-label">Documentation guides</div>
+  <div class="doc-grid">
+
+    <a class="doc-card" href="songa-docs.html">
+      <div class="card-icon-wrap">🖥️</div>
+      <div class="card-type">Web Platform</div>
+      <div class="card-title">Platform Documentation</div>
+      <p class="card-desc">
+        Complete guide to the Songa web application — fleet overview, battery management,
+        trip planning, service records, and analytics dashboards.
+      </p>
+      <div class="card-meta">
+        <span class="meta-tag">Web App</span>
+        <span class="meta-tag">Fleet Management</span>
+        <span class="meta-tag">Analytics</span>
+      </div>
+      <div class="card-cta">Open documentation</div>
+    </a>
+
+    <a class="doc-card" href="songa-admin-docs.html">
+      <div class="card-icon-wrap">🛠️</div>
+      <div class="card-type">Internal Reference</div>
+      <div class="card-title">Admin Tools</div>
+      <p class="card-desc">
+        Internal reference for the Songa Admin Panel — tenant creation wizard,
+        role-based access control, authentication flows, and platform configuration.
+      </p>
+      <div class="card-meta">
+        <span class="meta-tag">Admin Panel</span>
+        <span class="meta-tag">RBAC</span>
+        <span class="meta-tag">Tenants</span>
+      </div>
+      <div class="card-cta">Open documentation</div>
+    </a>
+
+    <a class="doc-card" href="songa-onboarding-docs.html">
+      <div class="card-icon-wrap">🚀</div>
+      <div class="card-type">Client Facing</div>
+      <div class="card-title">Onboarding Guide</div>
+      <p class="card-desc">
+        Step-by-step guide for new clients — setting up their organisation, configuring
+        locations, adding assets, and getting started with Songa in six steps.
+      </p>
+      <div class="card-meta">
+        <span class="meta-tag">Onboarding</span>
+        <span class="meta-tag">Getting Started</span>
+        <span class="meta-tag">Client Guide</span>
+      </div>
+      <div class="card-cta">Open documentation</div>
+    </a>
+
+    <a class="doc-card" href="songa-api-docs.html">
+      <div class="card-icon-wrap">⚙️</div>
+      <div class="card-type">API Reference</div>
+      <div class="card-title">API Documentation</div>
+      <p class="card-desc">
+        Complete REST/JSON API reference for Phase 9 — 22 modules, 105+ endpoints,
+        authentication guide, error codes, and global enumerations.
+      </p>
+      <div class="card-meta">
+        <span class="meta-tag">REST API</span>
+        <span class="meta-tag">22 Modules</span>
+        <span class="meta-tag">Phase 9</span>
+      </div>
+      <div class="card-cta">Open documentation</div>
+    </a>
+
+    <a class="doc-card" href="songa-mobile-docs.html">
+      <div class="card-icon-wrap">📱</div>
+      <div class="card-type">Mobile App</div>
+      <div class="card-title">Mobile App Documentation</div>
+      <p class="card-desc">
+        Driver and operator guide for the Songa mobile application — trips, battery swaps,
+        rentals, kilikawi sessions, and mobile-specific features.
+      </p>
+      <div class="card-meta">
+        <span class="meta-tag">Mobile</span>
+        <span class="meta-tag">Drivers</span>
+        <span class="meta-tag">Trips &amp; Rentals</span>
+      </div>
+      <div class="card-cta">Open documentation</div>
+    </a>
+
+  </div>
+
+  <!-- QUICK REFERENCE -->
+  <div class="section-label">Quick reference — jump to a topic</div>
+  <div class="quick-ref">
+    <h2>Frequently accessed sections</h2>
+    <div class="qr-grid">
+      <a class="qr-item" href="songa-api-docs.html#auth_guide">
+        <span class="qr-item-icon">🔐</span>
+        <span class="qr-item-text">API Authentication</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-api-docs.html#error_codes">
+        <span class="qr-item-icon">⚠️</span>
+        <span class="qr-item-text">Error Codes</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-api-docs.html#enums">
+        <span class="qr-item-icon">🔢</span>
+        <span class="qr-item-text">Enumerations</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-api-docs.html#auth_eps">
+        <span class="qr-item-icon">👤</span>
+        <span class="qr-item-text">Auth Endpoints</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-admin-docs.html">
+        <span class="qr-item-icon">🏢</span>
+        <span class="qr-item-text">Create Tenant</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-api-docs.html#trikes">
+        <span class="qr-item-icon">🛺</span>
+        <span class="qr-item-text">Trike Endpoints</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-api-docs.html#batteries">
+        <span class="qr-item-icon">🔋</span>
+        <span class="qr-item-text">Battery Endpoints</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-api-docs.html#trips">
+        <span class="qr-item-icon">🗺️</span>
+        <span class="qr-item-text">Trip Endpoints</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-api-docs.html#rentals">
+        <span class="qr-item-icon">🚗</span>
+        <span class="qr-item-text">Rentals Endpoints</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-api-docs.html#sessions">
+        <span class="qr-item-icon">🌱</span>
+        <span class="qr-item-text">Sessions Endpoints</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-api-docs.html#tenants">
+        <span class="qr-item-icon">🏭</span>
+        <span class="qr-item-text">Tenant API</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+      <a class="qr-item" href="songa-onboarding-docs.html">
+        <span class="qr-item-icon">🚀</span>
+        <span class="qr-item-text">Getting Started</span>
+        <span class="qr-item-arrow">↗</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- ABOUT SECTION -->
+  <div class="section-label">About the platform</div>
+  <div class="about-section">
+    <div class="about-card">
+      <h3>🌍 Songa Mobility Platform</h3>
+      <p>
+        Songa is an end-to-end solution for electric trike fleet management, battery energy logistics,
+        agricultural session tracking, and multi-tenant operations across Africa.
+      </p>
+      <ul>
+        <li>Multi-tenant fleet and battery management</li>
+        <li>Aggregation trip planning and real-time tracking</li>
+        <li>Agri-tech session management (tilling, milling, pumping)</li>
+        <li>USSD gateway integration for low-connectivity access</li>
+        <li>Power Africa asset management</li>
+        <li>Hub-level energy KPIs and prediction</li>
+      </ul>
+    </div>
+    <div class="about-card">
+      <h3>📚 Documentation overview</h3>
+      <p>
+        All five guides are self-contained single-page applications with sidebar navigation
+        and full-text search. They are designed for offline use — no internet connection required.
+      </p>
+      <ul>
+        <li>Platform Docs — web app features and workflows</li>
+        <li>Admin Tools — tenant setup and access control</li>
+        <li>Onboarding — client getting-started guide</li>
+        <li>API Reference — 22 REST modules, Phase 9</li>
+        <li>Mobile Docs — driver and operator mobile guide</li>
+      </ul>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <strong>Songa Mobility</strong> · Documentation Hub · Phase 9
+  </div>
+  <div class="footer-links">
+    <a href="songa-docs.html">Platform</a>
+    <a href="songa-admin-docs.html">Admin</a>
+    <a href="songa-onboarding-docs.html">Onboarding</a>
+    <a href="songa-api-docs.html">API</a>
+    <a href="songa-mobile-docs.html">Mobile</a>
+  </div>
+</footer>
+
+</body>
+</html>
