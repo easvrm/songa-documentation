@@ -102,12 +102,39 @@ code{background:#eef6f4;border-radius:4px;padding:1px 6px;font-size:13px;color:v
 .doc-table tr:last-child td{border-bottom:none;}
 .doc-table tr:nth-child(even) td{background:#f8fbfa;}
 
+
+/* Responsive: collapsible sidebar */
+#menu-toggle{display:none;position:fixed;top:10px;left:10px;z-index:120;width:40px;height:40px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--navy);font-size:20px;line-height:1;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+#sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(7,81,85,.45);z-index:90}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px 0}
+.table-scroll table{min-width:460px}
+@media(max-width:820px){
+  #sidebar{position:fixed;top:0;left:0;bottom:0;z-index:100;transform:translateX(-100%);transition:transform .25s ease;width:min(300px,85vw);min-width:0}
+  body.menu-open #sidebar{transform:none;box-shadow:0 0 40px rgba(0,0,0,.35)}
+  body.menu-open #sidebar-backdrop{display:block}
+  #menu-toggle{display:inline-flex}
+  body.menu-open #menu-toggle{display:none}
+  #content{width:100%}
+  .chapter-page{padding:64px 16px 40px;max-width:100%}
+  .page-header h1{font-size:23px}
+  .home-hero{padding:24px 20px}
+  .home-hero h1{font-size:24px}
+  .home-grid{grid-template-columns:1fr}
+  .endpoint-block{padding:16px 14px}
+  .auth-badge{margin-left:0}
+  .ep-path,code{overflow-wrap:anywhere;word-break:break-word}
+  .ep-table td,.ep-table th,.doc-table td,.doc-table th{padding:8px 10px}
+}
+.sidebar-logo a{color:inherit;text-decoration:none}
+.sidebar-logo a:hover{color:#fff}
 </style>
 </head>
 <body>
+<button id="menu-toggle" type="button" aria-label="Open navigation menu" aria-controls="sidebar" aria-expanded="false" onclick="toggleMenu()">☰</button>
+<div id="sidebar-backdrop" onclick="toggleMenu(false)"></div>
 <div id="sidebar">
   <div class="sidebar-header">
-    <div class="sidebar-logo">Songa Mobility</div>
+    <div class="sidebar-logo"><a href="index.html">Songa Mobility</a></div>
     <div class="sidebar-title">API Reference</div>
     <div class="sidebar-tag">Phase 9 · REST/JSON</div>
   </div>
@@ -166,7 +193,21 @@ function showPage(id, el) {
     });
   }
   document.getElementById('content').scrollTop = 0;
+  toggleMenu(false);
 }
+
+function toggleMenu(force){
+  var open = typeof force==='boolean' ? force : !document.body.classList.contains('menu-open');
+  document.body.classList.toggle('menu-open', open);
+  document.getElementById('menu-toggle').setAttribute('aria-expanded', open);
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') toggleMenu(false); });
+window.addEventListener('resize', function(){ if(window.innerWidth>820) toggleMenu(false); });
+
+// Wrap tables so wide ones scroll sideways instead of overflowing the page
+document.querySelectorAll('#content table').forEach(function(t){
+  var w=document.createElement('div'); w.className='table-scroll'; t.parentNode.insertBefore(w,t); w.appendChild(t);
+});
 
 // Search
 var searchIndex = [];
