@@ -236,7 +236,6 @@
     </div>
     <div class="topbar-right">
       <span class="topbar-badge">April 2026</span>
-      <span style="font-family:var(--font-ui);font-size:12px;color:var(--text-light)">Antarctica Global</span>
     </div>
   </div>
   <div id="content">
@@ -245,11 +244,11 @@
   <div class="chapter-hero">
     <div class="chapter-tag">Documentation</div>
     <h1>Songa Mobility Platform</h1>
-    <p class="lead">Complete reference documentation for the Songa web application — all modules, entities, and operational flows. Prepared by Antarctica Global Technology and Consulting, April 2026.</p>
+    <p class="lead">Complete reference documentation for the Songa web application — all modules, entities, and operational flows. April 2026.</p>
   </div>
   <p style="font-family:var(--font-ui);font-size:14px;color:var(--text-muted);margin-bottom:20px">20 chapters · Use the search bar above or navigate by section below</p>
   <div class="home-grid">
-    <a class="home-card" onclick="showPage('ch1',null)"><div class="home-card-num">Chapter 01</div><div class="home-card-title">Introduction</div><div class="home-card-desc">About Songa, Antarctica Global, and platform philosophy</div></a>
+    <a class="home-card" onclick="showPage('ch1',null)"><div class="home-card-num">Chapter 01</div><div class="home-card-title">Introduction</div><div class="home-card-desc">About Songa and platform philosophy</div></a>
     <a class="home-card" onclick="showPage('ch2',null)"><div class="home-card-num">Chapter 02</div><div class="home-card-title">Platform Architecture</div><div class="home-card-desc">Tech stack, multi-tenancy, IoT hardware, third-party integrations</div></a>
     <a class="home-card" onclick="showPage('ch3',null)"><div class="home-card-num">Chapter 03</div><div class="home-card-title">Core Entities</div><div class="home-card-desc">Hubs, trikes, batteries, drivers, farmers, trips, sessions</div></a>
     <a class="home-card" onclick="showPage('ch4',null)"><div class="home-card-num">Chapter 04</div><div class="home-card-title">Web App Overview</div><div class="home-card-desc">Navigation structure, authentication, onboarding</div></a>
@@ -274,18 +273,16 @@
 <!-- CH1 -->
 <div class="chapter-page" id="page-ch1">
   <div class="breadcrumb"><a onclick="showPage('home',null)">Home</a> › Chapter 1</div>
-  <div class="chapter-hero"><div class="chapter-tag">Chapter 01</div><h1>Introduction</h1><p class="lead">About this document, Songa Mobility, Antarctica Global, and the three principles that underpin the platform.</p></div>
+  <div class="chapter-hero"><div class="chapter-tag">Chapter 01</div><h1>Introduction</h1><p class="lead">About this document, Songa Mobility, and the three principles that underpin the platform.</p></div>
   <div class="doc-body">
     <h2 class="section-h2">1.1 About This Document</h2>
-    <p>This is a working reference document describing the Songa Mobility Web Application as built and maintained by Antarctica Global Technology and Consulting. It covers modules and flows documented to date — additional sections are being added as documentation progresses. Content reflects the platform as it currently stands, not as it is planned.</p>
+    <p>This is a working reference document describing the Songa Mobility Web Application as currently built. It covers modules and flows documented to date — additional sections are being added as documentation progresses. Content reflects the platform as it currently stands, not as it is planned.</p>
     <p>Intended audience: product managers, engineers, implementation partners, and operational stakeholders who need to understand how each module, entity, and flow works across the Songa web application.</p>
     <h2 class="section-h2">1.2 About Songa Mobility</h2>
     <p>Songa Mobility (<code>songa.mobi</code>) is a hub-based clean energy and mobility ecosystem operating in the Kisii region of Kenya. Songa operates a fleet of electric cargo trikes that serve smallholder farmers across the region, collecting agricultural produce — primarily milk — and delivering it to offtakers (dairies and produce buyers).</p>
     <p>In addition to its transport and aggregation operations, Songa provides Power Africa agri-tech services through motorised equipment deployed at farms, including tillers, millers, threshers, grinders, chaff cutters, and water pumps.</p>
     <div class="info-box"><strong>Revenue model:</strong> All batteries are owned by Songa. Battery energy is the primary revenue stream — drivers are charged for the energy consumed during every trip, session, and rental. All assets operate out of hub stations distributed across the Kisii region.</div>
-    <h2 class="section-h2">1.3 About Antarctica Global</h2>
-    <p>Antarctica Global Technology and Consulting is a climate technology company headquartered in Mumbai, with offices in Paris and Nairobi. Antarctica serves as the exclusive technology partner for Songa Mobility, responsible for full software development, IoT integration, and platform architecture — including the Web Application, Mobile Application, IoT data pipeline, and all third-party integrations.</p>
-    <h2 class="section-h2">1.4 Platform Philosophy</h2>
+    <h2 class="section-h2">1.3 Platform Philosophy</h2>
     <div class="step-list">
       <div class="step-item"><div class="step-num">1</div><div class="step-body"><strong>Every operational event generates structured financial data.</strong> A trip completed, a battery charged, a session conducted — all flow downstream into financial calculations.</div></div>
       <div class="step-item"><div class="step-num">2</div><div class="step-body"><strong>Physical assets are IoT-connected wherever possible.</strong> Trikes, batteries, chargers, and hub inverters make the web platform a live mirror of ground reality rather than a manual record.</div></div>
@@ -556,7 +553,7 @@
       <div class="field-item"><div class="field-name">Rule 5</div><div class="field-desc">Duplicate stops with the same activity are prevented</div></div>
     </div>
     <h3 class="section-h3">Route Optimisation Algorithm</h3>
-    <p>Rather than evaluating all possible stop orderings (n! permutations), the algorithm first eliminates invalid sequences by enforcing the collection-before-delivery constraint and first/last stop rules. From the remaining valid sequences, it calculates total GPS-coordinate-based distance for each and selects the route with the lowest total distance — including source and destination in that calculation. Designed by Antarctica specifically for the constraints of the Songa operation.</p>
+    <p>Rather than evaluating all possible stop orderings (n! permutations), the algorithm first eliminates invalid sequences by enforcing the collection-before-delivery constraint and first/last stop rules. From the remaining valid sequences, it calculates total GPS-coordinate-based distance for each and selects the route with the lowest total distance — including source and destination in that calculation. Designed specifically for the constraints of the Songa operation.</p>
   </div>
 </div>
 <!-- CH8 -->
@@ -689,7 +686,7 @@
 </figure>
 
     <p>Below the aggregate section, individual sub-station cards are shown for metered areas of the hub: Cold Store, Charging Station, Freezer, Working Station (configured per hub). Each card shows energy consumed and a source breakdown bar (Storage / Solar / Grid) with kWh values and percentages.</p>
-    <div class="info-box"><strong>Per-Meter Source Attribution:</strong> Antarctica has built a proprietary attribution layer. For each 1-minute interval, if only one source is active, 100% of that section's consumption is attributed to it. When solar and storage are simultaneously active, consumption is split proportionally by the hub-level source ratio at that exact moment. This is a derived value, not a direct hardware reading. Cron job sampling interval: 1 minute.</div>
+    <div class="info-box"><strong>Per-Meter Source Attribution:</strong> The platform uses a proprietary attribution layer. For each 1-minute interval, if only one source is active, 100% of that section's consumption is attributed to it. When solar and storage are simultaneously active, consumption is split proportionally by the hub-level source ratio at that exact moment. This is a derived value, not a direct hardware reading. Cron job sampling interval: 1 minute.</div>
     <h2 class="section-h2">10.3 Energy Distribution Graph</h2>
 
 <figure class="doc-screenshot doc-screenshot-wide">
