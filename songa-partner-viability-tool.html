@@ -1,0 +1,2791 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Songa Partner Viability Tool</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=DM+Mono:wght@400;500&display=swap">
+
+<style>
+/* ── Design tokens ──────────────────────────────────────────────── */
+/* Layout: single-column wizard → results panel + heatmap at bottom */
+:root {
+  --bg:         #F7F6F3;
+  --bg-card:    #FFFFFF;
+  --bg-input:   #F0EEE9;
+  --bg-muted:   #ECEAE4;
+  --border:     #DDD9CE;
+  --border-md:  #C8C4B8;
+  --text:       #1A1917;
+  --text-2:     #4A4740;
+  --text-3:     #7A7670;
+  --teal:       #0F7B5E;
+  --teal-l:     #D6F0E8;
+  --teal-d:     #0A5C46;
+  --amber:      #B55A00;
+  --amber-l:    #FEF0DC;
+  --red:        #B03020;
+  --red-l:      #FDE8E4;
+  --blue:       #1A5FA8;
+  --blue-l:     #E0EDFA;
+  --radius:     8px;
+  --radius-lg:  12px;
+  --shadow:     0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #131210;
+    --bg-card:   #1E1D1A;
+    --bg-input:  #262420;
+    --bg-muted:  #2A2824;
+    --border:    #3A3830;
+    --border-md: #4A4840;
+    --text:      #F0EDE6;
+    --text-2:    #B8B4A8;
+    --text-3:    #807C72;
+    --teal:      #2BBFA0;
+    --teal-l:    #0E3028;
+    --teal-d:    #3DD4B4;
+    --amber:     #F0A050;
+    --amber-l:   #2A1A08;
+    --red:       #E06050;
+    --red-l:     #2A0E0A;
+    --blue:      #5090D8;
+    --blue-l:    #0A1A30;
+    --shadow:    0 1px 3px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #131210; --bg-card:#1E1D1A; --bg-input:#262420; --bg-muted:#2A2824;
+  --border:#3A3830; --border-md:#4A4840; --text:#F0EDE6; --text-2:#B8B4A8; --text-3:#807C72;
+  --teal:#2BBFA0; --teal-l:#0E3028; --teal-d:#3DD4B4; --amber:#F0A050; --amber-l:#2A1A08;
+  --red:#E06050; --red-l:#2A0E0A; --blue:#5090D8; --blue-l:#0A1A30;
+  --shadow:0 1px 3px rgba(0,0,0,.3),0 4px 12px rgba(0,0,0,.2); color-scheme:dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  padding-left: max(16px, env(safe-area-inset-left,0px));
+  padding-right: max(16px, env(safe-area-inset-right,0px));
+  padding-block: 0 32px;
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0 14px;
+  border-bottom: 1.5px solid var(--border);
+  margin-bottom: 24px;
+}
+.site-logo {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--teal);
+  letter-spacing: -.3px;
+}
+.site-logo span { color: var(--text); font-weight: 500; }
+.tagline {
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-weight: 500;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+.layout { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 940px; margin: 0 auto; }
+@media (min-width: 760px) { .layout { grid-template-columns: 380px 1fr; } }
+
+/* ── Card ──────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.card-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+.section-sub {
+  font-size: 12px;
+  color: var(--text-3);
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+/* ── Mode picker ─────────────────────────────────────────────────── */
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.mode-btn {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  cursor: pointer;
+  background: var(--bg-input);
+  text-align: left;
+  transition: border-color .15s, background .15s;
+  position: relative;
+  overflow: hidden;
+}
+.mode-btn:hover { border-color: var(--border-md); }
+.mode-btn.active { border-color: var(--teal); background: var(--teal-l); }
+.mode-btn .btn-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+.mode-btn .btn-label { font-weight: 600; font-size: 13px; color: var(--text); display: block; }
+.mode-btn .btn-desc { font-size: 11px; color: var(--text-3); line-height: 1.4; display: block; margin-top: 2px; }
+.mode-btn.active .btn-label { color: var(--teal-d); }
+
+/* ── Toggle chips ──────────────────────────────────────────────── */
+.toggle-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0 14px; }
+.chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-input);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  transition: all .15s;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--border-md); }
+.chip.active { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+/* ── Form rows ──────────────────────────────────────────────────── */
+.form-section { margin-bottom: 18px; }
+.form-section-hdr {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.form-section-hdr::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.field { margin-bottom: 12px; min-width: 0; }
+.field label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  margin-bottom: 5px;
+}
+.field label .hint { font-size: 11px; color: var(--text-3); font-weight: 400; }
+.slider-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.slider-row input[type=range] {
+  flex: 1;
+  min-width: 0;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border-md);
+  outline: none;
+  cursor: pointer;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.slider-row input[type=range]::-moz-range-thumb {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: none;
+  background: var(--teal);
+}
+.slider-val {
+  min-width: 56px;
+  text-align: right;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.select-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color .15s;
+}
+.select-input:focus { border-color: var(--teal); }
+.number-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input);
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'DM Mono', monospace;
+  outline: none;
+  transition: border-color .15s;
+}
+.number-input:focus { border-color: var(--teal); }
+
+/* ── Collapsible sections ───────────────────────────────────────── */
+.collapsible { margin-bottom: 14px; }
+.collapsible-hdr {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  transition: background .15s;
+}
+.collapsible-hdr:hover { background: var(--border); }
+.collapsible-hdr .coll-title { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+.collapsible-hdr .coll-sub { font-size: 11px; color: var(--text-3); }
+.collapsible-hdr .coll-arrow { font-size: 10px; color: var(--text-3); transition: transform .2s; }
+.collapsible.open .coll-arrow { transform: rotate(90deg); }
+.collapsible-body {
+  padding: 14px 12px 4px;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  display: none;
+}
+.collapsible.open .collapsible-body { display: block; }
+
+/* ── Results panel ──────────────────────────────────────────────── */
+.results-col { display: flex; flex-direction: column; gap: 14px; }
+
+/* KPI strip */
+.kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+@media (min-width: 500px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+.kpi {
+  background: var(--bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+.kpi-lbl { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-3); margin: 0 0 4px; }
+.kpi-val { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; color: var(--text); margin: 0; line-height: 1.1; }
+.kpi-val.pos { color: var(--teal); }
+.kpi-val.neg { color: var(--red); }
+.kpi-unit { font-size: 11px; color: var(--text-3); margin: 2px 0 0; }
+
+/* Waterfall */
+.waterfall { display: flex; flex-direction: column; gap: 4px; }
+.wf-row { display: grid; grid-template-columns: minmax(120px, 220px) 1fr; gap: 8px; align-items: center; }
+.wf-label { font-size: 12.5px; color: var(--text-2); padding: 4px 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wf-bar-wrap { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; min-width: 0; }
+.wf-bar-track { height: 20px; background: var(--bg-muted); border-radius: 3px; overflow: hidden; position: relative; }
+.wf-bar { height: 100%; border-radius: 3px; position: absolute; left: 0; display: flex; align-items: center; padding: 0 6px; font-size: 10px; font-weight: 600; white-space: nowrap; color: #fff; min-width: 4px; }
+.wf-amt { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--text); min-width: 72px; text-align: right; }
+.wf-sep { border: none; border-top: 1px dashed var(--border); margin: 6px 0; }
+.wf-total .wf-label { font-weight: 700; color: var(--text); }
+.wf-total .wf-amt { font-weight: 700; }
+
+/* Verdict banner */
+.verdict {
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  border: 1.5px solid;
+}
+.verdict.viable { border-color: var(--teal); background: var(--teal-l); color: var(--teal-d); }
+.verdict.marginal { border-color: var(--amber); background: var(--amber-l); color: var(--amber); }
+.verdict.loss { border-color: var(--red); background: var(--red-l); color: var(--red); }
+.verdict-head { font-weight: 700; font-size: 15px; margin-bottom: 4px; font-family: 'Space Grotesk', sans-serif; }
+
+/* Explanation box */
+.explainer {
+  background: var(--blue-l);
+  border: 1px solid var(--blue);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--text-2);
+  line-height: 1.65;
+}
+.explainer b { color: var(--text); }
+
+/* ── Heatmap ─────────────────────────────────────────────────────── */
+.hm-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.hm-table { border-collapse: collapse; font-size: 10px; }
+.hm-th {
+  background: var(--bg-muted);
+  color: var(--text-3);
+  font-weight: 600;
+  padding: 4px 5px;
+  border: 0.5px solid var(--border);
+  text-align: center;
+  white-space: nowrap;
+  font-size: 9.5px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.hm-th.row-hdr { text-align: left; min-width: 72px; position: sticky; left: 0; z-index: 2; }
+.hm-th.col-hdr { writing-mode: vertical-rl; transform: rotate(180deg); height: 50px; vertical-align: bottom; padding: 5px 3px; }
+.hm-td {
+  padding: 3px 4px;
+  text-align: center;
+  border: 0.5px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: default;
+}
+.hm-td.row-lbl {
+  background: var(--bg-muted);
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  text-align: left;
+  color: var(--text);
+  padding: 3px 7px;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+.hm-legend { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 11px; color: var(--text-3); }
+.hm-swatch { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
+
+/* ── Tabs (for complex mode) ─────────────────────────────────────── */
+.tabs { display: flex; gap: 2px; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
+.tab-btn {
+  padding: 8px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-3);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-family: inherit;
+  transition: color .15s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--teal); border-bottom-color: var(--teal); font-weight: 600; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Commodity rows ──────────────────────────────────────────────── */
+.commodity-row {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color .15s;
+}
+.commodity-row.active { border-color: var(--teal); }
+.commodity-row-hdr {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-muted);
+}
+.commodity-row.active .commodity-row-hdr { background: var(--teal-l); }
+.com-toggle {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--border-md);
+  background: var(--bg-input);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+  transition: all .15s;
+}
+.commodity-row.active .com-toggle { background: var(--teal); border-color: var(--teal); }
+.com-toggle::after { content: ''; }
+.commodity-row.active .com-toggle::after { content: '✓'; }
+.com-label { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+.com-summary { font-size: 11.5px; color: var(--text-3); font-family: 'DM Mono', monospace; }
+.commodity-row-body {
+  padding: 12px;
+  border-top: 1px solid var(--border);
+  display: none;
+}
+.commodity-row.active .commodity-row-body { display: block; }
+
+/* ── Utility ─────────────────────────────────────────────────────── */
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 0; }
+.hidden { display: none !important; }
+.note-inline { font-size: 11px; color: var(--text-3); font-style: italic; margin-top: 4px; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+.badge-green { background: var(--teal-l); color: var(--teal-d); }
+.badge-amber { background: var(--amber-l); color: var(--amber); }
+.badge-blue  { background: var(--blue-l); color: var(--blue); }
+hr.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+/* ── Formula annotation panel ───────────────────────────────── */
+.kpi-info-btn {
+  display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;padding:0;border:none;border-radius:50%;
+  background:var(--bg-input);color:var(--text-3);
+  font-size:10px;font-weight:700;cursor:pointer;
+  vertical-align:middle;margin-left:3px;line-height:1;
+  transition:background .15s,color .15s;
+}
+.kpi-info-btn:hover { background:var(--teal);color:#fff; }
+
+.formula-panel {
+  border:1px solid var(--teal);
+  background:var(--bg-card);
+  position:relative;
+}
+.fp-formula-wrap {
+  display:flex;align-items:flex-start;gap:8px;
+}
+.fp-formula {
+  flex:1;display:block;
+  font-family:'Courier New',monospace;font-size:11.5px;
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:6px;padding:10px 12px;
+  white-space:pre-wrap;word-break:break-all;
+  color:var(--teal);line-height:1.6;
+}
+.fp-copy-btn {
+  flex-shrink:0;padding:6px 10px;border:1px solid var(--border);
+  background:var(--bg-input);border-radius:6px;
+  font-size:11px;cursor:pointer;color:var(--text-2);
+  transition:background .15s;
+}
+.fp-copy-btn:hover { background:var(--teal);color:#fff;border-color:var(--teal); }
+.close-panel-btn {
+  padding:2px 8px;border:1px solid var(--border);border-radius:6px;
+  background:var(--bg-input);font-size:12px;cursor:pointer;color:var(--text-3);
+}
+.close-panel-btn:hover { background:var(--red);color:#fff;border-color:var(--red); }
+
+/* ── JSON export button ─────────────────────────────────────── */
+.json-export-btn {
+  flex-shrink:0;padding:4px 10px;
+  border:1px solid var(--border);border-radius:6px;
+  background:var(--bg-input);font-size:11px;cursor:pointer;
+  color:var(--text-2);transition:background .15s;white-space:nowrap;
+}
+.json-export-btn:hover { background:var(--teal);color:#fff;border-color:var(--teal); }
+.excel-btn { background:var(--blue-l);color:var(--blue);border-color:var(--blue); }
+.excel-btn:hover { background:var(--blue);color:#fff;border-color:var(--blue); }
+</style>
+
+<!-- fflate for ZIP manipulation (style-preserving Excel patching) -->
+<script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
+
+<!-- HEADER -->
+<header class="site-header" style="max-width:940px;margin:0 auto;">
+  <div>
+    <div class="site-logo">Songa <span>Partner Viability Tool</span></div>
+    <div class="tagline">Pilot route economics · v1.0 · November 2026</div>
+  </div>
+</header>
+
+<div class="layout" style="align-items:start">
+
+<!-- ══════════════════════════════════════════════════════════════
+     LEFT COLUMN — INPUTS
+══════════════════════════════════════════════════════════════ -->
+<div style="display:flex;flex-direction:column;gap:14px">
+
+  <!-- ── 1. OPERATING MODEL ──────────────────────────────────── -->
+  <div class="card">
+    <p class="card-title">Step 1 — What is the asset used for?</p>
+    <p class="section-sub" style="margin-bottom:12px">The operating model determines how the platform earns revenue and what assets it needs to provide.</p>
+
+    <div class="mode-grid">
+      <button class="mode-btn active" id="btn-trader" onclick="setMode('trader')">
+        <span class="btn-icon">🌾</span>
+        <span class="btn-label">Trader + Logistics</span>
+        <span class="btn-desc">The platform buys from farmers and sells to an offtaker. The asset pays for itself through the commodity margin.</span>
+      </button>
+      <button class="mode-btn" id="btn-logistics" onclick="setMode('logistics')">
+        <span class="btn-icon">📦</span>
+        <span class="btn-label">Pure Logistics</span>
+        <span class="btn-desc">The platform charges a service fee per kg-km moved. No commodity ownership. Simpler model, lower margin per trip.</span>
+      </button>
+    </div>
+
+    <!-- Base load type (only for Trader mode) -->
+    <div id="baseload-type-row">
+      <div class="form-section-hdr">What does the trike carry in the morning?</div>
+      <p class="section-sub" style="margin:0 0 10px">Select the commodity or commodities. A trike can carry a mix — the tool adds up all commodities into one daily revenue total.</p>
+      <div class="toggle-row" style="margin-bottom:12px">
+        <button class="chip active" id="chip-dairy" onclick="setBaseLoad('dairy')">🥛 Dairy / Milk</button>
+        <button class="chip" id="chip-multi" onclick="setBaseLoad('multi')">📦 Other / Mixed commodities</button>
+      </div>
+      <div class="explainer" id="baseload-explain">
+        <b>Dairy collection</b> is the core model. Trikes collect raw milk from farmers in the morning and deliver to a dairy cooperative or processor. Revenue is the spread between what the platform pays farmers and the price the offtaker pays.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. AFTERNOON USE (Trader) / REVENUE MODEL (Logistics) ── -->
+  <!-- Trader version -->
+  <div class="card" id="card-step2-trader">
+    <p class="card-title">Step 2 — Afternoon use of the asset</p>
+    <p class="section-sub">After the morning base load, what does the trike do in the afternoon?</p>
+
+    <div class="toggle-row" style="margin-bottom:10px">
+      <button class="chip active" id="chip-baas" onclick="setAfternoon('baas')">⚡ Battery-as-a-Service (BaaS)</button>
+      <button class="chip" id="chip-taas" onclick="setAfternoon('taas')">🚚 Transport-as-a-Service (TaaS)</button>
+      <button class="chip" id="chip-none" onclick="setAfternoon('none')">💤 No afternoon use</button>
+    </div>
+
+    <div class="explainer" id="afternoon-explain">
+      <b>Battery-as-a-Service (BaaS):</b> After the morning run, the trike's battery capacity is rented out to other operators (motorcycle taxis, delivery riders) through battery swaps. The platform earns a swap tariff. The driver operates independently and pays a daily energy fee — this model generates recurring energy revenue without operating a second logistics route.
+    </div>
+  </div>
+
+  <!-- Logistics version: separate revenue layer questions -->
+  <div class="card hidden" id="card-step2-logistics">
+    <p class="card-title">Step 2 — Hub revenue model</p>
+    <p class="section-sub">In a pure logistics hub, the driver owns the transport economics — TaaS revenue goes to the driver. The hub's survival depends on BaaS revenue from the charging station. Choose whether the hub also participates in TaaS earnings or runs on BaaS alone.</p>
+
+    <div class="explainer" style="margin-bottom:14px">
+      <b>⚡ BaaS only (pure charging hub):</b> The hub earns exclusively from battery swaps. The driver keeps 100% of transport income. The hub must be viable on charging revenue alone — the more conservative model.<br><br>
+      <b>⚡📦 BaaS + TaaS (hub co-earns transport):</b> The hub takes a share of transport tariff revenue in addition to BaaS earnings. The driver receives a commission; the hub keeps the spread. Requires operational oversight but improves hub economics.
+    </div>
+
+    <div class="form-section-hdr">Hub revenue model</div>
+    <div class="toggle-row" style="margin-bottom:4px">
+      <button class="chip active" id="chip-log-baas-only" onclick="setLogModel('baas_only')">⚡ BaaS only</button>
+      <button class="chip" id="chip-log-baas-taas" onclick="setLogModel('baas_taas')">⚡📦 BaaS + TaaS</button>
+    </div>
+    <p class="note-inline">In BaaS-only mode, transport demand drives electricity consumption and trike wear — it just doesn't generate hub revenue directly.</p>
+  </div>
+
+  <!-- ── 3. GENERAL PARAMETERS ───────────────────────────────── -->
+  <div class="card">
+    <p class="card-title">Step 3 — General parameters</p>
+
+    <div class="form-section">
+      <div class="form-section-hdr">Currency &amp; calendar</div>
+      <div class="row2">
+        <div class="field">
+          <label>Currency <span class="hint">display</span></label>
+          <select class="select-input" id="sel-currency" onchange="setCurrency(this.value)">
+            <option value="KES">KES — Kenyan Shilling</option>
+            <option value="NGN">NGN — Nigerian Naira</option>
+            <option value="TZS">TZS — Tanzanian Shilling</option>
+            <option value="UGX">UGX — Ugandan Shilling</option>
+            <option value="XOF">XOF — CFA Franc (BCEAO)</option>
+            <option value="XAF">XAF — CFA Franc (BEAC)</option>
+            <option value="USD">USD — US Dollar</option>
+            <option value="EUR">EUR — Euro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Exchange rate <span class="hint" id="fx-hint">KES/USD</span></label>
+          <input class="number-input" id="n-fx" type="number" value="130" min="1" oninput="upd()">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Working days/month <span class="hint">ops calendar</span></label>
+          <div class="slider-row">
+            <input type="range" min="20" max="31" step="1" value="26" id="r-wdays" oninput="upd()">
+            <span class="slider-val" id="v-wdays">26</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Interest rate <span class="hint">% / year</span></label>
+          <div class="slider-row">
+            <input type="range" min="10" max="30" step="1" value="20" id="r-rate" oninput="upd()">
+            <span class="slider-val" id="v-rate">20%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-hdr">Trike &amp; battery (USD)</div>
+      <div class="row2">
+        <div class="field">
+          <label>Trike landed cost <span class="hint">USD, no battery</span></label>
+          <input class="number-input" id="n-trike" type="number" value="2000" oninput="upd()">
+        </div>
+        <div class="field">
+          <label>Trike financing term <span class="hint">months</span></label>
+          <div class="slider-row">
+            <input type="range" min="12" max="60" step="6" value="36" id="r-trk-mo" oninput="upd()">
+            <span class="slider-val" id="v-trk-mo">36</span>
+          </div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Battery cost <span class="hint">USD/kWh</span></label>
+          <input class="number-input" id="n-bat-kwh-usd" type="number" value="200" oninput="upd()">
+        </div>
+        <div class="field">
+          <label>Battery capacity <span class="hint">kWh</span></label>
+          <div class="slider-row">
+            <input type="range" min="2" max="15" step="0.5" value="7" id="r-bat-kwh" oninput="upd()">
+            <span class="slider-val" id="v-bat-kwh">7.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Maintenance/month <span class="hint">% of trike cost</span></label>
+        <div class="slider-row">
+          <input type="range" min="0.3" max="2" step="0.1" value="0.8" id="r-maint" oninput="upd()">
+          <span class="slider-val" id="v-maint">0.8%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Electricity cost -->
+    <div class="form-section">
+      <div class="form-section-hdr">Energy</div>
+      <div class="row2">
+        <div class="field">
+          <label>Electricity cost <span class="hint" id="elec-unit-lbl">local/kWh</span></label>
+          <input class="number-input" id="n-elec" type="number" value="25" oninput="upd()">
+        </div>
+        <div class="field">
+          <label>Efficiency <span class="hint">km/kWh</span></label>
+          <div class="slider-row">
+            <input type="range" min="6" max="16" step="0.5" value="10" id="r-eff" oninput="upd()">
+            <span class="slider-val" id="v-eff">10.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4a. MORNING: DAIRY ──────────────────────────────────── -->
+  <div class="card" id="card-dairy">
+    <p class="card-title">Step 4 — Morning: Dairy collection</p>
+    <p class="section-sub">The platform buys milk from farmers and sells to a dairy processor or cooperative. The spread is gross revenue per litre before paying the driver and covering costs.</p>
+
+    <div class="form-section">
+      <div class="form-section-hdr">Price parameters</div>
+      <div class="row2">
+        <div class="field">
+          <label>Price paid to farmers <span class="hint" id="farm-unit">KES/L</span></label>
+          <input class="number-input" id="n-farm-price" type="number" value="41" step="0.5" oninput="upd()">
+        </div>
+        <div class="field">
+          <label>Price from offtaker <span class="hint" id="off-unit">KES/L</span></label>
+          <input class="number-input" id="n-off-price" type="number" value="47" step="0.5" oninput="upd()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Gross spread <span class="hint">(computed)</span></label>
+        <div style="padding:7px 10px;background:var(--bg-muted);border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--teal)" id="d-spread">6.00 KES/L</div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Driver commission <span class="hint" id="drv-unit">KES/L</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.5" max="5" step="0.1" value="2.8" id="r-drv" oninput="upd()">
+            <span class="slider-val" id="v-drv">2.80</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Platform fee <span class="hint" id="pf-unit">KES/L</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.1" max="3" step="0.1" value="1.0" id="r-pf" oninput="upd()">
+            <span class="slider-val" id="v-pf">1.00</span>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Milk loss in transit <span class="hint">% shrinkage</span></label>
+        <div class="slider-row">
+          <input type="range" min="0" max="5" step="0.1" value="1" id="r-loss" oninput="upd()">
+          <span class="slider-val" id="v-loss">1.0%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-hdr">Volume &amp; route</div>
+      <div class="row2">
+        <div class="field">
+          <label>Volume/trike/day <span class="hint">litres</span></label>
+          <div class="slider-row">
+            <input type="range" min="100" max="1200" step="25" value="500" id="r-vol" oninput="upd()">
+            <span class="slider-val" id="v-vol">500</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Route distance <span class="hint">km/day</span></label>
+          <div class="slider-row">
+            <input type="range" min="10" max="150" step="5" value="60" id="r-km" oninput="upd()">
+            <span class="slider-val" id="v-km">60</span>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Number of trikes <span class="hint">fleet size</span></label>
+        <div class="slider-row">
+          <input type="range" min="1" max="30" step="1" value="1" id="r-trikes" oninput="upd()">
+          <span class="slider-val" id="v-trikes">1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4b. MORNING: MULTI-COMMODITY ─────────────────────────── -->
+  <div class="card hidden" id="card-commodity">
+    <p class="card-title">Step 4 — Morning: Commodity mix</p>
+    <p class="section-sub">Enable one or more commodities. Each can have its own price and volume. The trike's total morning revenue is the sum across all active commodities.</p>
+
+    <!-- Commodity: Grain / Cereals -->
+    <div class="commodity-row" id="com-grain" onclick="toggleCommodity('grain',event)">
+      <div class="commodity-row-hdr">
+        <div class="com-toggle" id="com-toggle-grain"></div>
+        <span class="com-label">🌾 Grain / Cereals</span>
+        <span class="com-summary" id="com-sum-grain">off</span>
+      </div>
+      <div class="commodity-row-body" onclick="event.stopPropagation()">
+        <p class="section-sub" style="margin-bottom:10px">Maize, sorghum, beans, etc. Bought at farmgate and sold to aggregator or mill. Revenue = (offtaker price − farmer price − driver commission) × kg/day.</p>
+        <div class="row2">
+          <div class="field"><label>Farmer price <span class="hint" id="grain-farm-unit">KES/kg</span></label>
+            <input class="number-input" id="n-grain-farm" type="number" value="28" step="0.5" oninput="upd()"></div>
+          <div class="field"><label>Offtaker price <span class="hint" id="grain-off-unit">KES/kg</span></label>
+            <input class="number-input" id="n-grain-off" type="number" value="34" step="0.5" oninput="upd()"></div>
+        </div>
+        <div class="field"><label>Driver commission <span class="hint" id="grain-drv-unit">KES/kg</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.5" max="6" step="0.25" value="2" id="r-grain-drv" oninput="upd()">
+            <span class="slider-val" id="v-grain-drv">2.00</span>
+          </div></div>
+        <div class="row2">
+          <div class="field"><label>Volume/day <span class="hint">kg</span></label>
+            <div class="slider-row">
+              <input type="range" min="100" max="3000" step="50" value="500" id="r-grain-vol" oninput="upd()">
+              <span class="slider-val" id="v-grain-vol">500</span>
+            </div></div>
+          <div class="field"><label>Route distance <span class="hint">km</span></label>
+            <div class="slider-row">
+              <input type="range" min="10" max="120" step="5" value="40" id="r-grain-km" oninput="upd()">
+              <span class="slider-val" id="v-grain-km">40</span>
+            </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commodity: Fresh Produce -->
+    <div class="commodity-row" id="com-produce" onclick="toggleCommodity('produce',event)">
+      <div class="commodity-row-hdr">
+        <div class="com-toggle" id="com-toggle-produce"></div>
+        <span class="com-label">🥬 Fresh Produce</span>
+        <span class="com-summary" id="com-sum-produce">off</span>
+      </div>
+      <div class="commodity-row-body" onclick="event.stopPropagation()">
+        <p class="section-sub" style="margin-bottom:10px">Vegetables, fruit, perishables. Higher margin but needs speed and low transit loss.</p>
+        <div class="row2">
+          <div class="field"><label>Farmer price <span class="hint" id="produce-farm-unit">KES/kg</span></label>
+            <input class="number-input" id="n-produce-farm" type="number" value="20" step="0.5" oninput="upd()"></div>
+          <div class="field"><label>Offtaker price <span class="hint" id="produce-off-unit">KES/kg</span></label>
+            <input class="number-input" id="n-produce-off" type="number" value="32" step="0.5" oninput="upd()"></div>
+        </div>
+        <div class="field"><label>Driver commission <span class="hint" id="produce-drv-unit">KES/kg</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.5" max="6" step="0.25" value="2.5" id="r-produce-drv" oninput="upd()">
+            <span class="slider-val" id="v-produce-drv">2.50</span>
+          </div></div>
+        <div class="field"><label>Transit loss <span class="hint">% spoilage</span></label>
+          <div class="slider-row">
+            <input type="range" min="0" max="10" step="0.5" value="3" id="r-produce-loss" oninput="upd()">
+            <span class="slider-val" id="v-produce-loss">3.0%</span>
+          </div></div>
+        <div class="row2">
+          <div class="field"><label>Volume/day <span class="hint">kg</span></label>
+            <div class="slider-row">
+              <input type="range" min="100" max="2000" step="50" value="300" id="r-produce-vol" oninput="upd()">
+              <span class="slider-val" id="v-produce-vol">300</span>
+            </div></div>
+          <div class="field"><label>Route distance <span class="hint">km</span></label>
+            <div class="slider-row">
+              <input type="range" min="10" max="120" step="5" value="30" id="r-produce-km" oninput="upd()">
+              <span class="slider-val" id="v-produce-km">30</span>
+            </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commodity: Livestock inputs -->
+    <div class="commodity-row" id="com-inputs" onclick="toggleCommodity('inputs',event)">
+      <div class="commodity-row-hdr">
+        <div class="com-toggle" id="com-toggle-inputs"></div>
+        <span class="com-label">🐄 Livestock Inputs</span>
+        <span class="com-summary" id="com-sum-inputs">off</span>
+      </div>
+      <div class="commodity-row-body" onclick="event.stopPropagation()">
+        <p class="section-sub" style="margin-bottom:10px">Feed, minerals, veterinary supplies delivered to farmers. Reverse logistics: Songa buys from input supplier and delivers to farmers at a marked-up price.</p>
+        <div class="row2">
+          <div class="field"><label>Supplier price <span class="hint" id="inputs-farm-unit">KES/kg</span></label>
+            <input class="number-input" id="n-inputs-farm" type="number" value="50" step="1" oninput="upd()"></div>
+          <div class="field"><label>Delivery price <span class="hint" id="inputs-off-unit">KES/kg</span></label>
+            <input class="number-input" id="n-inputs-off" type="number" value="62" step="1" oninput="upd()"></div>
+        </div>
+        <div class="field"><label>Driver commission <span class="hint" id="inputs-drv-unit">KES/kg</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.5" max="6" step="0.25" value="2" id="r-inputs-drv" oninput="upd()">
+            <span class="slider-val" id="v-inputs-drv">2.00</span>
+          </div></div>
+        <div class="row2">
+          <div class="field"><label>Volume/day <span class="hint">kg</span></label>
+            <div class="slider-row">
+              <input type="range" min="50" max="1500" step="50" value="200" id="r-inputs-vol" oninput="upd()">
+              <span class="slider-val" id="v-inputs-vol">200</span>
+            </div></div>
+          <div class="field"><label>Route distance <span class="hint">km</span></label>
+            <div class="slider-row">
+              <input type="range" min="10" max="120" step="5" value="40" id="r-inputs-km" oninput="upd()">
+              <span class="slider-val" id="v-inputs-km">40</span>
+            </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commodity: Fuel / Energy -->
+    <div class="commodity-row" id="com-fuel" onclick="toggleCommodity('fuel',event)">
+      <div class="commodity-row-hdr">
+        <div class="com-toggle" id="com-toggle-fuel"></div>
+        <span class="com-label">⛽ Fuel / Energy</span>
+        <span class="com-summary" id="com-sum-fuel">off</span>
+      </div>
+      <div class="commodity-row-body" onclick="event.stopPropagation()">
+        <p class="section-sub" style="margin-bottom:10px">Small-volume petroleum or cooking fuel delivery to rural areas. High value-per-kg but regulated and logistically complex.</p>
+        <div class="row2">
+          <div class="field"><label>Cost price <span class="hint" id="fuel-farm-unit">KES/L</span></label>
+            <input class="number-input" id="n-fuel-farm" type="number" value="140" step="1" oninput="upd()"></div>
+          <div class="field"><label>Sale price <span class="hint" id="fuel-off-unit">KES/L</span></label>
+            <input class="number-input" id="n-fuel-off" type="number" value="158" step="1" oninput="upd()"></div>
+        </div>
+        <div class="field"><label>Driver commission <span class="hint" id="fuel-drv-unit">KES/L</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.5" max="8" step="0.5" value="3" id="r-fuel-drv" oninput="upd()">
+            <span class="slider-val" id="v-fuel-drv">3.00</span>
+          </div></div>
+        <div class="row2">
+          <div class="field"><label>Volume/day <span class="hint">litres</span></label>
+            <div class="slider-row">
+              <input type="range" min="50" max="500" step="25" value="150" id="r-fuel-vol" oninput="upd()">
+              <span class="slider-val" id="v-fuel-vol">150</span>
+            </div></div>
+          <div class="field"><label>Route distance <span class="hint">km</span></label>
+            <div class="slider-row">
+              <input type="range" min="10" max="120" step="5" value="30" id="r-fuel-km" oninput="upd()">
+              <span class="slider-val" id="v-fuel-km">30</span>
+            </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commodity: Custom -->
+    <div class="commodity-row" id="com-custom" onclick="toggleCommodity('custom',event)">
+      <div class="commodity-row-hdr">
+        <div class="com-toggle" id="com-toggle-custom"></div>
+        <span class="com-label">📦 Other / Custom</span>
+        <span class="com-summary" id="com-sum-custom">off</span>
+      </div>
+      <div class="commodity-row-body" onclick="event.stopPropagation()">
+        <p class="section-sub" style="margin-bottom:10px">Any other commodity: construction materials, pharmaceuticals, etc.</p>
+        <div class="field"><label>Commodity name</label>
+          <input class="number-input" id="n-custom-name" type="text" value="Custom commodity" style="font-family:inherit" oninput="upd()"></div>
+        <div class="row2">
+          <div class="field"><label>Cost / unit <span class="hint" id="custom-farm-unit">KES/kg</span></label>
+            <input class="number-input" id="n-custom-farm" type="number" value="30" step="0.5" oninput="upd()"></div>
+          <div class="field"><label>Revenue / unit <span class="hint" id="custom-off-unit">KES/kg</span></label>
+            <input class="number-input" id="n-custom-off" type="number" value="40" step="0.5" oninput="upd()"></div>
+        </div>
+        <div class="field"><label>Driver commission / unit <span class="hint" id="custom-drv-unit">KES/unit</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.5" max="10" step="0.5" value="2" id="r-custom-drv" oninput="upd()">
+            <span class="slider-val" id="v-custom-drv">2.00</span>
+          </div></div>
+        <div class="row2">
+          <div class="field"><label>Volume/day <span class="hint">units/kg/L</span></label>
+            <div class="slider-row">
+              <input type="range" min="50" max="2000" step="50" value="300" id="r-custom-vol" oninput="upd()">
+              <span class="slider-val" id="v-custom-vol">300</span>
+            </div></div>
+          <div class="field"><label>Route distance <span class="hint">km</span></label>
+            <div class="slider-row">
+              <input type="range" min="10" max="120" step="5" value="40" id="r-custom-km" oninput="upd()">
+              <span class="slider-val" id="v-custom-km">40</span>
+            </div></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="note-inline">At least one commodity must be active. Total morning revenue = sum of (net spread × volume) across all active commodities.</p>
+
+    <div class="form-section" style="margin-top:14px">
+      <div class="form-section-hdr">Fleet</div>
+      <div class="field">
+        <label>Number of trikes <span class="hint">fleet size</span></label>
+        <div class="slider-row">
+          <input type="range" min="1" max="30" step="1" value="1" id="r-trikes-com" oninput="upd()">
+          <span class="slider-val" id="v-trikes-com">1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4c. PURE LOGISTICS: Demand + Pricing ───────────────── -->
+  <div class="card hidden" id="card-logistics">
+    <p class="card-title">Step 4 — Transport demand &amp; pricing</p>
+    <p class="section-sub">The trike operates all day as a logistics service. First estimate the available demand, then set the service tariff to test whether TaaS is viable at that demand level.</p>
+
+    <div class="form-section">
+      <div class="form-section-hdr">Transport demand (what does the market need?)</div>
+      <p class="section-sub" style="margin:0 0 10px">Estimate the volume of goods that need to be moved in this corridor each day, and over what distances. This is the addressable market for one trike.</p>
+      <div class="row2">
+        <div class="field">
+          <label>Trips/trike/day <span class="hint">loaded runs</span></label>
+          <div class="slider-row">
+            <input type="range" min="1" max="12" step="1" value="3" id="r-rides" oninput="upd()">
+            <span class="slider-val" id="v-rides">3</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Load/trip <span class="hint">kg per trip</span></label>
+          <div class="slider-row">
+            <input type="range" min="50" max="500" step="25" value="200" id="r-load" oninput="upd()">
+            <span class="slider-val" id="v-load">200</span>
+          </div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Distance/trip <span class="hint">km loaded</span></label>
+          <div class="slider-row">
+            <input type="range" min="2" max="80" step="2" value="10" id="r-ride-km" oninput="upd()">
+            <span class="slider-val" id="v-ride-km">10</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Return (empty) <span class="hint">km back</span></label>
+          <div class="slider-row">
+            <input type="range" min="0" max="60" step="2" value="0" id="r-empty-km" oninput="upd()">
+            <span class="slider-val" id="v-empty-km">0</span>
+          </div>
+        </div>
+      </div>
+      <!-- Computed demand summary -->
+      <div style="background:var(--bg-muted);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:12.5px;color:var(--text-2);margin-top:4px">
+        Daily demand: <b id="d-kgkm">—</b> kg-km/day &nbsp;·&nbsp; Total distance: <b id="d-totalkm">—</b> km/day
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-hdr">Service tariff (what can you charge?)</div>
+      <p class="section-sub" style="margin:0 0 10px">The market rate for last-mile rural logistics in East Africa is typically <b>0.10–0.60 KES/kg-km</b> for bulk commodities and up to 1–2 KES/kg-km for high-value or time-sensitive cargo. Adjust to reflect local benchmarks.</p>
+      <div class="row2">
+        <div class="field">
+          <label>Service tariff <span class="hint" id="log-unit">KES/kg-km</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.05" max="2" step="0.05" value="0.3" id="r-log-tariff" oninput="upd()">
+            <span class="slider-val" id="v-log-tariff">0.30</span>
+          </div>
+        </div>
+        <div class="field" id="field-log-drv">
+          <label>Driver commission <span class="hint" id="hint-log-drv">% of tariff (BaaS+TaaS)</span></label>
+          <div class="slider-row">
+            <input type="range" min="10" max="70" step="5" value="40" id="r-log-drv" oninput="upd()">
+            <span class="slider-val" id="v-log-drv">40%</span>
+          </div>
+          <p class="note-inline" id="note-log-drv-baasonly" style="display:none;margin-top:4px">In BaaS-only mode the driver is independent and keeps the full transport tariff — this slider has no effect on hub economics.</p>
+        </div>
+      </div>
+      <!-- Computed revenue summary -->
+      <div style="background:var(--bg-muted);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:12.5px;color:var(--text-2);margin-top:4px">
+        Gross revenue: <b id="d-loggross">—</b>/day &nbsp;·&nbsp; Hub net from transport: <b id="d-lognet">—</b>/day
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-hdr">Fleet</div>
+      <div class="field">
+        <label>Number of trikes <span class="hint">fleet size</span></label>
+        <div class="slider-row">
+          <input type="range" min="1" max="30" step="1" value="1" id="r-trikes-log" oninput="upd()">
+          <span class="slider-val" id="v-trikes-log">1</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Hub revenue parameters (logistics mode only) ───────── -->
+  <div class="collapsible hidden" id="card-log-baas">
+    <div class="collapsible-hdr" onclick="toggleColl(this)">
+      <span class="coll-title">⚡ Hub revenue parameters</span>
+      <span class="coll-sub">BaaS charging + optional TaaS</span>
+      <span class="coll-arrow">▶</span>
+    </div>
+    <div class="collapsible-body">
+
+      <!-- BaaS section — always shown in logistics mode -->
+      <div class="form-section-hdr">BaaS — charging hub revenue</div>
+      <p class="section-sub">The charging station serves external e-mobility operators (moto-taxis, delivery bikes) through battery swaps. This is the hub's primary revenue source regardless of model.</p>
+      <div class="row2">
+        <div class="field">
+          <label>Charging cabinets <span class="hint">units at hub</span></label>
+          <div class="slider-row">
+            <input type="range" min="1" max="10" step="1" value="1" id="r-log-cabinets" oninput="upd()">
+            <span class="slider-val" id="v-log-cabinets">1</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Cabinet cost <span class="hint">USD/unit</span></label>
+          <input class="number-input" id="n-log-cabinet-usd" type="number" value="800" oninput="upd()">
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Swaps/cabinet/day <span class="hint">external operators</span></label>
+          <div class="slider-row">
+            <input type="range" min="2" max="30" step="1" value="10" id="r-log-swaps" oninput="upd()">
+            <span class="slider-val" id="v-log-swaps">10</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>BaaS margin <span class="hint">% above energy cost</span></label>
+          <div class="slider-row">
+            <input type="range" min="10" max="60" step="5" value="30" id="r-log-baas-margin" oninput="upd()">
+            <span class="slider-val" id="v-log-baas-margin">30%</span>
+          </div>
+        </div>
+      </div>
+      <p class="note-inline">Cabinet CAPEX amortised over 5 years. BaaS tariff = electricity rate × kWh/swap × (1 + margin%).</p>
+
+      <!-- TaaS section — only shown in baas_taas mode -->
+      <div id="card-log-taas-params" class="hidden" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="form-section-hdr">TaaS — hub share of transport revenue</div>
+        <p class="section-sub">In BaaS + TaaS mode, the hub also earns a share of transport tariff income. The driver retains a commission; the hub keeps the spread. Transport demand still comes from the logistics parameters above.</p>
+        <div class="row2">
+          <div class="field">
+            <label>Hub tariff share <span class="hint">% kept by hub</span></label>
+            <div class="slider-row">
+              <input type="range" min="10" max="70" step="5" value="60" id="r-log-hub-share" oninput="upd()">
+              <span class="slider-val" id="v-log-hub-share">60%</span>
+            </div>
+          </div>
+          <div class="field">
+            <label style="color:var(--text-2);font-size:12px">Driver commission <span class="hint">set above in logistics parameters</span></label>
+            <p class="note-inline" style="margin-top:4px">Use the "Driver commission" slider in the logistics parameters section. Hub net = hub share % × gross; driver net = driver commission % × gross.</p>
+          </div>
+        </div>
+        <p class="note-inline">Hub share + driver share must ≤ 100%. Any remainder is margin for the driver's enterprise. Gross transport revenue comes from kg-km demand × tariff set in the logistics parameters.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── 4c. AFTERNOON: BaaS parameters ─────────────────────── -->
+  <div class="collapsible open" id="card-baas">
+    <div class="collapsible-hdr" onclick="toggleColl(this)">
+      <span class="coll-title">⚡ BaaS parameters</span>
+      <span class="coll-sub">afternoon battery swap revenue</span>
+      <span class="coll-arrow">▶</span>
+    </div>
+    <div class="collapsible-body">
+      <p class="section-sub">After the morning run, the charging station at the hub serves other operators through battery swaps. The driver runs swaps independently and pays a daily energy tariff.</p>
+      <div class="row2">
+        <div class="field">
+          <label>Swaps/trike/day <span class="hint">afternoon only</span></label>
+          <div class="slider-row">
+            <input type="range" min="1" max="20" step="1" value="5" id="r-swaps" oninput="upd()">
+            <span class="slider-val" id="v-swaps">5</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>kWh dispensed / swap <span class="hint">operator battery size</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.5" max="5" step="0.5" value="1.5" id="r-kwh-swap" oninput="upd()">
+            <span class="slider-val" id="v-kwh-swap">1.5</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>BaaS margin <span class="hint">% above energy cost</span></label>
+          <div class="slider-row">
+            <input type="range" min="10" max="60" step="5" value="30" id="r-baas-margin" oninput="upd()">
+            <span class="slider-val" id="v-baas-margin">30%</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin:10px 0 4px;flex-wrap:wrap">
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:120px">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:2px">Tariff charged / swap</div>
+          <div style="font-size:17px;font-weight:700;color:var(--accent)" id="v-baas-tariff-swap">—</div>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:120px">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:2px">Energy cost / swap</div>
+          <div style="font-size:17px;font-weight:700;color:var(--text-2)" id="v-baas-energy-swap">—</div>
+        </div>
+        <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;min-width:120px">
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:2px">Margin / swap</div>
+          <div style="font-size:17px;font-weight:700;color:var(--pos)" id="v-baas-margin-swap">—</div>
+        </div>
+      </div>
+      <p class="note-inline">Tariff = electricity rate × kWh/swap × (1 + margin%). The operator is charged this tariff per swap; electricity cost is covered by the platform — the margin is net revenue per swap.</p>
+    </div>
+  </div>
+
+  <!-- ── 4d. AFTERNOON: TaaS parameters ─────────────────────── -->
+  <div class="collapsible hidden" id="card-taas">
+    <div class="collapsible-hdr" onclick="toggleColl(this)">
+      <span class="coll-title">🚚 TaaS parameters</span>
+      <span class="coll-sub">afternoon logistics revenue</span>
+      <span class="coll-arrow">▶</span>
+    </div>
+    <div class="collapsible-body">
+      <p class="section-sub">The trike continues carrying cargo in the afternoon. The platform operates the route and charges a full logistics tariff.</p>
+      <div class="row2">
+        <div class="field">
+          <label>Afternoon rides/day</label>
+          <div class="slider-row">
+            <input type="range" min="1" max="8" step="1" value="2" id="r-pm-rides" oninput="upd()">
+            <span class="slider-val" id="v-pm-rides">2</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Load/ride <span class="hint">kg</span></label>
+          <div class="slider-row">
+            <input type="range" min="50" max="450" step="25" value="200" id="r-pm-load" oninput="upd()">
+            <span class="slider-val" id="v-pm-load">200</span>
+          </div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Distance/ride <span class="hint">km</span></label>
+          <div class="slider-row">
+            <input type="range" min="2" max="40" step="2" value="10" id="r-pm-km" oninput="upd()">
+            <span class="slider-val" id="v-pm-km">10</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>TaaS tariff <span class="hint" id="taas-tariff-unit">KES/kg-km</span></label>
+          <div class="slider-row">
+            <input type="range" min="0.05" max="2" step="0.05" value="0.14" id="r-taas-tariff" oninput="upd()">
+            <span class="slider-val" id="v-taas-tariff">0.14</span>
+          </div>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span style="font-size:12px;color:var(--text-2);font-weight:500">TaaS operated by:</span>
+        <button class="chip active" id="chip-taas-songa" onclick="setTaasOp('songa')">Songa</button>
+        <button class="chip" id="chip-taas-driver" onclick="setTaasOp('driver')">Partner/Driver</button>
+      </div>
+      <div class="explainer" id="taas-op-explain" style="margin-top:10px">
+        <b>Platform-operated TaaS:</b> The platform manages the afternoon route, pays the driver, and earns the full tariff. Higher revenue but requires operational involvement.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /left col -->
+
+<!-- ══════════════════════════════════════════════════════════════
+     RIGHT COLUMN — RESULTS
+══════════════════════════════════════════════════════════════ -->
+<div class="results-col">
+
+  <!-- Verdict -->
+  <div class="verdict viable" id="verdict-box">
+    <div class="verdict-head" id="v-head">—</div>
+    <div id="v-body"></div>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="card">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:2px">
+      <p class="card-title" style="margin:0">Key figures — per trike per day</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap"><button class="json-export-btn" onclick="exportJSON()" title="Export current assumptions as JSON">⬇ Export JSON</button><button class="json-export-btn excel-btn" onclick="downloadExcel()" title="Download pre-filled Excel model">📊 Download Excel</button></div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <p class="kpi-lbl">Morning revenue <button class="kpi-info-btn" onclick="showFormula('rev-am')" aria-label="Show Excel formula">ℹ</button></p>
+        <p class="kpi-val" id="k-rev-am">—</p>
+        <p class="kpi-unit" id="k-rev-am-u">—</p>
+      </div>
+      <div class="kpi">
+        <p class="kpi-lbl">Afternoon revenue <button class="kpi-info-btn" onclick="showFormula('rev-pm')" aria-label="Show Excel formula">ℹ</button></p>
+        <p class="kpi-val" id="k-rev-pm">—</p>
+        <p class="kpi-unit" id="k-rev-pm-u">—</p>
+      </div>
+      <div class="kpi">
+        <p class="kpi-lbl">Total CAPEX cost <button class="kpi-info-btn" onclick="showFormula('capex')" aria-label="Show Excel formula">ℹ</button></p>
+        <p class="kpi-val" id="k-capex">—</p>
+        <p class="kpi-unit">daily annuity</p>
+      </div>
+      <div class="kpi">
+        <p class="kpi-lbl">Total OPEX cost <button class="kpi-info-btn" onclick="showFormula('opex')" aria-label="Show Excel formula">ℹ</button></p>
+        <p class="kpi-val" id="k-opex">—</p>
+        <p class="kpi-unit">energy + maint</p>
+      </div>
+      <div class="kpi">
+        <p class="kpi-lbl">Net / trike / day <button class="kpi-info-btn" onclick="showFormula('net')" aria-label="Show Excel formula">ℹ</button></p>
+        <p class="kpi-val" id="k-net">—</p>
+        <p class="kpi-unit" id="k-net-u">before fleet OPEX</p>
+      </div>
+      <div class="kpi">
+        <p class="kpi-lbl">Break-even volume <button class="kpi-info-btn" onclick="showFormula('be')" aria-label="Show Excel formula">ℹ</button></p>
+        <p class="kpi-val" id="k-be">—</p>
+        <p class="kpi-unit" id="k-be-u">—</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formula annotation panel -->
+  <div id="formula-panel" style="display:none" class="card formula-panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <p class="card-title" style="margin:0;font-size:13px">📊 Excel formula — <span id="fp-title" style="color:var(--accent)"></span></p>
+      <button class="close-panel-btn" onclick="hideFormula()" aria-label="Close">✕</button>
+    </div>
+    <div id="fp-desc" style="font-size:12px;color:var(--text-2);margin-bottom:10px;line-height:1.6"></div>
+    <div class="fp-formula-wrap">
+      <code id="fp-formula" class="fp-formula"></code>
+      <button class="fp-copy-btn" onclick="copyFormula()" title="Copy formula">Copy</button>
+    </div>
+    <div id="fp-refs" style="margin-top:10px;font-size:11px;color:var(--text-3);line-height:1.8"></div>
+  </div>
+
+  <!-- Tabs for P&L -->
+  <div class="card">
+    <p class="card-title">Daily P&amp;L breakdown — per trike</p>
+    <div class="tabs" id="pl-tabs">
+      <button class="tab-btn active" onclick="setTab('songa')">Songa</button>
+      <button class="tab-btn" onclick="setTab('driver')">Driver</button>
+    </div>
+
+    <!-- Songa P&L -->
+    <div class="tab-panel active" id="tab-songa">
+      <div class="waterfall" id="wf-hub"></div>
+    </div>
+
+    <!-- Driver P&L -->
+    <div class="tab-panel" id="tab-driver">
+      <div class="waterfall" id="wf-driver"></div>
+    </div>
+  </div>
+
+  <!-- Fleet summary (shown when >1 trike) -->
+  <div class="card" id="card-fleet" style="display:none">
+    <p class="card-title">Fleet summary — per month</p>
+    <div class="kpi-grid" id="fleet-kpis"></div>
+  </div>
+
+  <!-- Heatmap -->
+  <div class="card">
+    <p class="card-title">Heatmap — net margin/day</p>
+    <p style="font-size:12px;color:var(--text-2);margin:0 0 10px;line-height:1.6" id="hm-axis-desc">
+      <strong>Rows</strong> = morning volume · <strong>Cols</strong> = gross spread · current scenario marked ★
+    </p>
+    <div class="hm-scroll"><table class="hm-table" id="hm-table"></table></div>
+    <div class="hm-legend">
+      <div class="hm-swatch" style="background:#0a4d3a"></div><span>Strong</span>
+      <div class="hm-swatch" style="background:#1D9E75"></div><span>Viable</span>
+      <div class="hm-swatch" style="background:#e8e4dc"></div><span>Break-even</span>
+      <div class="hm-swatch" style="background:#f5c4b3"></div><span>Marginal loss</span>
+      <div class="hm-swatch" style="background:#c0411a"></div><span>Loss</span>
+      <span style="margin-left:4px">★ = current inputs</span>
+    </div>
+  </div>
+
+  <!-- Explanation of model -->
+  <div class="card">
+    <p class="card-title">How this tool works</p>
+    <div id="model-explain" style="font-size:12.5px;color:var(--text-2);line-height:1.8"></div>
+  </div>
+
+</div><!-- /right col -->
+</div><!-- /layout -->
+
+<script>
+// ════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════
+let MODE      = 'trader';   // 'trader' | 'logistics'
+let BASELOAD  = 'dairy';    // 'dairy' | 'multi'
+let AFTERNOON = 'baas';     // 'baas' | 'taas' | 'none'
+let TAAS_OP   = 'songa';    // 'songa' | 'driver'
+let LOG_MODEL = 'baas_only'; // logistics mode: 'baas_only' | 'baas_taas'
+let ACTIVE_TAB= 'songa';
+
+// Active commodity set for multi mode
+const COM_ACTIVE = { grain:false, produce:false, inputs:false, fuel:false, custom:false };
+
+const CURRENCY_SYMBOLS = { KES:'KES', NGN:'NGN', USD:'USD', EUR:'€', TZS:'TZS', UGX:'UGX', XOF:'XOF', XAF:'XAF' };
+
+// KES-baseline defaults for all currency-sensitive sliders and number inputs
+// scale: multiplier relative to KES
+const CURRENCY_SCALE = { KES:1, NGN:10, USD:0.0077, EUR:0.0065, TZS:1, UGX:3.6, XOF:4.7, XAF:4.7 };
+// Default FX rate to USD for each currency
+const CURRENCY_FX    = { KES:130, NGN:1700, USD:1, EUR:0.92, TZS:2550, UGX:3700, XOF:620, XAF:620 };
+
+// KES baseline for every currency-sensitive slider/input
+const SLIDER_KES = {
+  'r-drv':         { min:0.5,  max:5,   step:0.1,  value:2.8  },
+  'r-pf':          { min:0.1,  max:3,   step:0.1,  value:1.0  },
+  'r-log-tariff':  { min:0.05, max:2,   step:0.05, value:0.3  },
+  'r-taas-tariff': { min:0.05, max:2,   step:0.05, value:0.14 },
+};
+const NUMBER_KES = {
+  'n-elec':       25,
+  'n-farm-price': 41,
+  'n-off-price':  47,
+};
+
+let _prevScale = 1; // tracks scale of the currently displayed currency
+
+function setCurrency(ccy) {
+  const newScale = CURRENCY_SCALE[ccy] || 1;
+  const ratio    = newScale / _prevScale;   // how much to shift current values
+
+  // rescale every currency-sensitive slider
+  for (const [id, kes] of Object.entries(SLIDER_KES)) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    const newMin   = +(kes.min   * newScale).toPrecision(4);
+    const newMax   = +(kes.max   * newScale).toPrecision(4);
+    const newStep  = +(kes.step  * newScale).toPrecision(4);
+    const newVal   = +(+el.value * ratio).toPrecision(4);
+    el.min   = newMin;
+    el.max   = newMax;
+    el.step  = newStep;
+    el.value = Math.min(Math.max(newVal, newMin), newMax);
+  }
+
+  // rescale number inputs
+  for (const [id, kesDefault] of Object.entries(NUMBER_KES)) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    // If still at the previous currency's default, snap to new default
+    const prevDefault = +(kesDefault * _prevScale).toPrecision(5);
+    if (Math.abs(+el.value - prevDefault) < 0.001 * prevDefault + 0.001) {
+      el.value = +(kesDefault * newScale).toPrecision(5);
+    } else {
+      el.value = +(+el.value * ratio).toPrecision(5);
+    }
+  }
+
+  // update FX default
+  const fxEl = document.getElementById('n-fx');
+  if (fxEl && CURRENCY_FX[ccy] !== undefined) fxEl.value = CURRENCY_FX[ccy];
+
+  _prevScale = newScale;
+  upd();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ════════════════════════════════════════════════════════════════
+function f(n, dec=0)  { return isFinite(n) ? Math.abs(n) < 0.001 ? '0' : n.toLocaleString('en',{maximumFractionDigits:dec,minimumFractionDigits:dec}) : '—'; }
+function cur()        { return CURRENCY_SYMBOLS[document.getElementById('sel-currency').value] || 'KES'; }
+function fx()         { return +document.getElementById('n-fx').value || 130; }
+function wdays()      { return +document.getElementById('r-wdays').value || 26; }
+function wdays_yr()   { return wdays() * 12; }
+function rate_yr()    { return (+document.getElementById('r-rate').value || 20) / 100; }
+function annuity(cost_local, months) {
+  const r = rate_yr() / 12, n = months;
+  if(r === 0) return cost_local / n;
+  return cost_local * (r * Math.pow(1+r,n)) / (Math.pow(1+r,n) - 1);
+}
+
+function toggleColl(hdr) {
+  const c = hdr.parentElement;
+  c.classList.toggle('open');
+}
+function setTab(t) {
+  ACTIVE_TAB = t;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase() === t));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-'+t));
+}
+
+function setMode(m) {
+  MODE = m;
+  document.getElementById('btn-trader').classList.toggle('active', m==='trader');
+  document.getElementById('btn-logistics').classList.toggle('active', m==='logistics');
+  // Step 1 baseload chips only for trader
+  document.getElementById('baseload-type-row').classList.toggle('hidden', m==='logistics');
+  // Step 2: trader afternoon vs logistics all-day
+  document.getElementById('card-step2-trader').classList.toggle('hidden', m!=='trader');
+  document.getElementById('card-step2-logistics').classList.toggle('hidden', m!=='logistics');
+  // Step 4 commodity cards
+  document.getElementById('card-dairy').classList.toggle('hidden', m!=='trader' || BASELOAD!=='dairy');
+  document.getElementById('card-commodity').classList.toggle('hidden', m!=='trader' || BASELOAD!=='multi');
+  document.getElementById('card-logistics').classList.toggle('hidden', m!=='logistics');
+  // BaaS hub card always shown in logistics mode (always has BaaS); TaaS params shown only in baas_taas mode
+  document.getElementById('card-log-baas').classList.toggle('hidden', m!=='logistics');
+  document.getElementById('card-log-taas-params').classList.toggle('hidden', m!=='logistics' || LOG_MODEL!=='baas_taas');
+  // Trader afternoon BaaS/TaaS cards hidden when in logistics mode
+  document.getElementById('card-baas').classList.toggle('hidden', m!=='trader' || AFTERNOON!=='baas');
+  document.getElementById('card-taas').classList.toggle('hidden', m!=='trader' || AFTERNOON!=='taas');
+  // Sync driver share field state whenever mode changes
+  if(m === 'logistics') {
+    const drvField = document.getElementById('field-log-drv');
+    const drvNote  = document.getElementById('note-log-drv-baasonly');
+    const drvHint  = document.getElementById('hint-log-drv');
+    if(drvField) drvField.style.opacity = LOG_MODEL==='baas_only' ? '0.5' : '1';
+    if(drvNote)  drvNote.style.display  = LOG_MODEL==='baas_only' ? '' : 'none';
+    if(drvHint)  drvHint.textContent    = LOG_MODEL==='baas_only' ? '% (informational only)' : '% of tariff (BaaS+TaaS)';
+  }
+  upd();
+}
+
+function setLogModel(val) {
+  LOG_MODEL = val;
+  document.getElementById('chip-log-baas-only').classList.toggle('active', val==='baas_only');
+  document.getElementById('chip-log-baas-taas').classList.toggle('active', val==='baas_taas');
+  document.getElementById('card-log-taas-params').classList.toggle('hidden', val!=='baas_taas');
+  // Show/hide driver share note and dim slider in BaaS-only mode
+  const drvField = document.getElementById('field-log-drv');
+  const drvNote  = document.getElementById('note-log-drv-baasonly');
+  const drvHint  = document.getElementById('hint-log-drv');
+  if(drvField) drvField.style.opacity = val==='baas_only' ? '0.5' : '1';
+  if(drvNote)  drvNote.style.display  = val==='baas_only' ? '' : 'none';
+  if(drvHint)  drvHint.textContent    = val==='baas_only' ? '% (informational only)' : '% of tariff (BaaS+TaaS)';
+  upd();
+}
+
+function setBaseLoad(b) {
+  BASELOAD = b;
+  document.getElementById('chip-dairy').classList.toggle('active', b==='dairy');
+  document.getElementById('chip-multi').classList.toggle('active', b==='multi');
+  document.getElementById('card-dairy').classList.toggle('hidden', b!=='dairy');
+  document.getElementById('card-commodity').classList.toggle('hidden', b!=='multi');
+  const ex = {
+    dairy: '<b>Dairy collection</b> is the core model. Trikes collect raw milk from farmers in the morning and deliver to a dairy cooperative or processor. Revenue is the spread between what the platform pays farmers and the price the offtaker pays.',
+    multi: '<b>Mixed commodity model:</b> The trike carries one or more commodity types in the morning — grain, fresh produce, livestock inputs, fuel, or any combination. Enable each commodity below and set its price and volume. Total morning revenue = sum of net spreads across all active commodities.'
+  };
+  document.getElementById('baseload-explain').innerHTML = ex[b];
+  upd();
+}
+
+function toggleCommodity(id, evt) {
+  // Don't toggle when clicking inside body inputs
+  if(evt && evt.target !== evt.currentTarget && !evt.target.classList.contains('commodity-row-hdr') &&
+     !evt.target.classList.contains('com-toggle') && !evt.target.classList.contains('com-label') &&
+     !evt.target.classList.contains('com-summary')) return;
+  COM_ACTIVE[id] = !COM_ACTIVE[id];
+  document.getElementById('com-'+id).classList.toggle('active', COM_ACTIVE[id]);
+  upd();
+}
+
+function setAfternoon(a) {
+  AFTERNOON = a;
+  ['baas','taas','none'].forEach(x => document.getElementById('chip-'+x).classList.toggle('active', x===a));
+  document.getElementById('card-baas').classList.toggle('hidden', a!=='baas');
+  document.getElementById('card-taas').classList.toggle('hidden', a!=='taas');
+  const ex = {
+    baas: '<b>Battery-as-a-Service (BaaS):</b> After the morning run, the charging station at the hub serves other operators through battery swaps. The platform earns a swap tariff. The driver operates independently and pays a daily energy fee — this model generates recurring energy revenue without operating a second logistics route.',
+    taas: '<b>Transport-as-a-Service (TaaS):</b> The trike continues carrying cargo in the afternoon. If <em>platform-operated</em>, the full tariff is earned and the driver is paid. If <em>partner/driver-operated</em>, the driver finds their own work and the platform only earns energy revenue (BaaS mode effectively).',
+    none: '<b>No afternoon use:</b> The trike is parked after the morning run. All economics come from the morning base load. Useful as a conservative base case.'
+  };
+  document.getElementById('afternoon-explain').innerHTML = ex[a];
+  upd();
+}
+
+function setTaasOp(op) {
+  TAAS_OP = op;
+  document.getElementById('chip-taas-songa').classList.toggle('active', op==='songa');
+  document.getElementById('chip-taas-driver').classList.toggle('active', op==='driver');
+  const ex = {
+    songa:'<b>Platform-operated TaaS:</b> The platform manages the afternoon route, pays the driver, and earns the full tariff. Higher revenue but requires operational involvement.',
+    driver:'<b>Partner/driver-operated:</b> The driver independently finds afternoon work. The platform only charges for energy (battery swaps). This is effectively BaaS in the afternoon — simpler operationally.'
+  };
+  document.getElementById('taas-op-explain').innerHTML = ex[op];
+  upd();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  CORE CALCULATION
+// ════════════════════════════════════════════════════════════════
+function calc() {
+  const c = cur(), FX = fx(), WD = wdays(), WD_YR = wdays_yr();
+
+  // ── Trike CAPEX ──────────────────────────────────────────────
+  const trike_usd   = +document.getElementById('n-trike').value || 2000;
+  const trike_local = trike_usd * FX;
+  const trk_months  = +document.getElementById('r-trk-mo').value || 36;
+  const trike_daily = annuity(trike_local, trk_months) / WD;
+
+  const bat_kwh     = +document.getElementById('r-bat-kwh').value || 7;
+  const bat_usd_kwh = +document.getElementById('n-bat-kwh-usd').value || 200;
+  const bat_local   = bat_kwh * bat_usd_kwh * FX;
+  // Battery amortisation: binding = min(calendar 5yr, cycle life 2000 / cycles per day)
+  // per trike 1 cycle/day → 5yr = 1825 cycles < 2000, so calendar-binding
+  const bat_months  = 5 * 12; // 5yr default for pilot
+  const bat_daily   = annuity(bat_local, bat_months) / WD;
+
+  const maint_pct   = +document.getElementById('r-maint').value / 100;
+  const maint_daily = trike_local * maint_pct;  // per month ÷ 1 = per month, then /wdays
+  const maint_day   = trike_local * maint_pct / WD;  // /month /wdays
+
+  const eff         = +document.getElementById('r-eff').value || 10;      // km/kWh
+  const elec_rate   = +document.getElementById('n-elec').value || 25;     // local/kWh
+
+  // ── Morning revenue ──────────────────────────────────────────
+  let am_rev_day = 0, am_drv_pay = 0, am_km = 0, am_detail = {};
+  let nT;
+  if(MODE==='trader' && BASELOAD==='dairy') nT = +document.getElementById('r-trikes').value || 1;
+  else if(MODE==='trader' && BASELOAD==='multi') nT = +document.getElementById('r-trikes-com').value || 1;
+  else nT = +document.getElementById('r-trikes-log').value || 1;
+
+  if(MODE === 'trader' && BASELOAD === 'dairy') {
+    const farm_p  = +document.getElementById('n-farm-price').value || 41;
+    const off_p   = +document.getElementById('n-off-price').value || 47;
+    const loss    = +document.getElementById('r-loss').value / 100;
+    const drv_c   = +document.getElementById('r-drv').value;
+    const pf_c    = +document.getElementById('r-pf').value;
+    const vol     = +document.getElementById('r-vol').value || 500;
+    am_km         = +document.getElementById('r-km').value || 60;
+
+    const spread_gross = off_p * (1 - loss) - farm_p;
+    const net_songa_l  = spread_gross - drv_c - pf_c;  // Songa keeps: spread - driver - platform fee
+    am_rev_day    = net_songa_l * vol;
+    am_drv_pay    = drv_c * vol;
+    am_detail = { spread_gross, drv_c, pf_c, vol, net_songa_l, loss, farm_p, off_p };
+  } else if(MODE === 'trader' && BASELOAD === 'multi') {
+    // Multi-commodity: sum across active commodities
+    const COM_DEFS = {
+      grain:   { farm:'n-grain-farm', off:'n-grain-off', drv:'r-grain-drv', vol:'r-grain-vol', km:'r-grain-km', loss:0, unit:'kg' },
+      produce: { farm:'n-produce-farm', off:'n-produce-off', drv:'r-produce-drv', vol:'r-produce-vol', km:'r-produce-km', lossId:'r-produce-loss', unit:'kg' },
+      inputs:  { farm:'n-inputs-farm', off:'n-inputs-off', drv:'r-inputs-drv', vol:'r-inputs-vol', km:'r-inputs-km', loss:0, unit:'kg' },
+      fuel:    { farm:'n-fuel-farm', off:'n-fuel-off', drv:'r-fuel-drv', vol:'r-fuel-vol', km:'r-fuel-km', loss:0, unit:'L' },
+      custom:  { farm:'n-custom-farm', off:'n-custom-off', drv:'r-custom-drv', vol:'r-custom-vol', km:'r-custom-km', loss:0, unit:'unit' },
+    };
+    const com_rows = [];
+    let total_km = 0;
+    Object.entries(COM_DEFS).forEach(([key, def]) => {
+      if(!COM_ACTIVE[key]) return;
+      const fp  = +document.getElementById(def.farm).value || 0;
+      const op  = +document.getElementById(def.off).value || 0;
+      const drv = +document.getElementById(def.drv).value || 0;
+      const vol = +document.getElementById(def.vol).value || 0;
+      const km  = +document.getElementById(def.km).value || 0;
+      const loss = def.lossId ? +document.getElementById(def.lossId).value/100 : (def.loss||0);
+      const spread_gross = op*(1-loss) - fp;
+      const net_songa    = spread_gross - drv;
+      const rev          = net_songa * vol;
+      am_rev_day  += rev;
+      am_drv_pay  += drv * vol;
+      total_km     = Math.max(total_km, km); // conservative: routes may overlap
+      com_rows.push({ key, fp, op, drv, vol, km, loss, spread_gross, net_songa, rev });
+    });
+    am_km = total_km;
+    am_detail = { multi: true, com_rows, total_am_rev: am_rev_day };
+
+    // Update commodity summary badges
+    COM_DEFS && Object.keys(COM_DEFS).forEach(key => {
+      const sumEl = document.getElementById('com-sum-'+key);
+      if(!sumEl) return;
+      if(!COM_ACTIVE[key]) { sumEl.textContent='off'; return; }
+      const def = COM_DEFS[key];
+      const fp  = +document.getElementById(def.farm).value||0;
+      const op  = +document.getElementById(def.off).value||0;
+      const drv = +document.getElementById(def.drv).value||0;
+      const vol = +document.getElementById(def.vol).value||0;
+      const loss = def.lossId ? +document.getElementById(def.lossId).value/100 : 0;
+      const net = (op*(1-loss)-fp-drv)*vol;
+      sumEl.textContent = cur()+' '+f(net)+'/day';
+    });
+
+  } else if(MODE === 'logistics') {
+    const tariff   = +document.getElementById('r-log-tariff').value;
+    const drv_pct  = +document.getElementById('r-log-drv').value / 100;
+    const rides    = +document.getElementById('r-rides').value;
+    const load_kg  = +document.getElementById('r-load').value;
+    const r_km     = +document.getElementById('r-ride-km').value;
+    const e_km     = +document.getElementById('r-empty-km').value;
+    const total_km_day = rides * (r_km + e_km);
+    am_km          = total_km_day;
+    const kgkm_day  = rides * load_kg * r_km;
+    const gross     = tariff * kgkm_day;
+    am_drv_pay      = gross * drv_pct;
+    // In BaaS-only mode: TaaS revenue goes to driver — hub earns 0 from transport
+    // In BaaS+TaaS mode: hub keeps its share, driver gets commission
+    if(LOG_MODEL === 'baas_taas') {
+      const hub_share = +document.getElementById('r-log-hub-share').value / 100;
+      am_rev_day  = gross * hub_share;
+      am_drv_pay  = gross * drv_pct;
+    } else {
+      am_rev_day  = 0;   // BaaS only: hub earns nothing from transport
+      am_drv_pay  = gross * drv_pct;
+    }
+    am_detail = { tariff, drv_pct, rides, load_kg, r_km, e_km, kgkm_day, gross, total_km_day, log_model: LOG_MODEL };
+  }
+
+  // ── Energy cost (morning) ────────────────────────────────────
+  const elec_am = (am_km / eff) * elec_rate;
+
+  // ── Afternoon / BaaS hub revenue ─────────────────────────────
+  let pm_rev_day = 0, pm_km = 0, pm_detail = {};
+  const swaps       = +document.getElementById('r-swaps').value || 5;
+  const baas_margin = +document.getElementById('r-baas-margin').value / 100;
+  const usable_kwh  = bat_kwh * 0.9; // 90% usable (trike battery)
+  const kwh_per_swap = +document.getElementById('r-kwh-swap').value || 1.5; // energy per operator swap
+  const energy_cost_swap = elec_rate * kwh_per_swap;
+  const baas_tariff_swap = energy_cost_swap * (1 + baas_margin);
+
+  // Logistics mode: BaaS hub is always present (the hub IS a charging station)
+  let log_hub_capex_day = 0;
+  if(MODE === 'logistics') {
+    const cabinets        = +document.getElementById('r-log-cabinets').value || 1;
+    const cabinet_usd     = +document.getElementById('n-log-cabinet-usd').value || 800;
+    const cabinet_local   = cabinet_usd * FX;
+    const hub_swaps_total = cabinets * (+document.getElementById('r-log-swaps').value || 10);
+    const hub_margin_pct  = +document.getElementById('r-log-baas-margin').value / 100;
+    // Cabinet amortised 5 years (60 months)
+    log_hub_capex_day     = annuity(cabinets * cabinet_local, 60) / WD;
+    // BaaS revenue: tariff = energy_cost × (1 + margin); margin per swap × total swaps
+    const hub_energy_per_swap = elec_rate * kwh_per_swap;
+    const hub_baas_tariff     = hub_energy_per_swap * (1 + hub_margin_pct);
+    const hub_margin_per_swap = hub_baas_tariff - hub_energy_per_swap;
+    pm_rev_day = hub_baas_tariff * hub_swaps_total;   // gross BaaS tariff (hub pays elec separately)
+    pm_detail  = { cabinets, cabinet_usd, hub_swaps_total, hub_margin_pct, hub_margin_per_swap, hub_energy_per_swap, hub_baas_tariff };
+  } else if(MODE === 'trader') {
+    if(AFTERNOON === 'baas') {
+      // BaaS: Songa earns gross tariff × swaps; elec_pm covers energy cost separately
+      pm_rev_day = baas_tariff_swap * swaps;
+      pm_detail  = { swaps, baas_tariff_swap, energy_cost_swap, baas_margin };
+    } else if(AFTERNOON === 'taas') {
+      const pm_rides  = +document.getElementById('r-pm-rides').value || 2;
+      const pm_load   = +document.getElementById('r-pm-load').value || 200;
+      const pm_km_r   = +document.getElementById('r-pm-km').value || 10;
+      const taas_t    = +document.getElementById('r-taas-tariff').value;
+      pm_km = pm_rides * pm_km_r;
+      const pm_kgkm   = pm_rides * pm_load * pm_km_r;
+      const pm_gross  = taas_t * pm_kgkm;
+      if(TAAS_OP === 'songa') {
+        pm_rev_day = pm_gross;
+      } else {
+        // driver operates → Songa only gets BaaS for the kWh used in afternoon
+        const elec_pm_tmp = (pm_km / eff) * elec_rate;
+        pm_rev_day = elec_pm_tmp * baas_margin;  // margin on energy only
+      }
+      pm_detail = { pm_rides, pm_load, pm_km_r, taas_t, pm_kgkm, pm_gross };
+    }
+  }
+
+  // ── Energy cost (afternoon) ──────────────────────────────────
+  const elec_pm = (MODE==='trader' && AFTERNOON === 'taas') ? (pm_km / eff) * elec_rate
+                : (MODE==='trader' && AFTERNOON === 'baas')  ? energy_cost_swap * swaps
+                : (MODE==='logistics')                       ? (pm_detail.hub_energy_per_swap||0) * (pm_detail.hub_swaps_total||0)
+                : 0;
+
+  // ── Totals ───────────────────────────────────────────────────
+  const total_rev  = am_rev_day + pm_rev_day;
+  const capex_day  = trike_daily + bat_daily + log_hub_capex_day;
+  const opex_day   = maint_day + elec_am + elec_pm;
+  const total_cost = capex_day + opex_day;
+  const net_day    = total_rev - total_cost;
+
+  // Break-even calculation
+  let be_val = null, be_unit = '';
+  if(MODE === 'trader' && BASELOAD === 'dairy' && am_detail.net_songa_l > 0) {
+    be_val = Math.max(0, (total_cost - pm_rev_day) / am_detail.net_songa_l);
+    be_unit = 'L/day';
+  } else if(MODE === 'trader' && BASELOAD === 'multi' && am_detail.com_rows && am_detail.com_rows.length > 0) {
+    // Break-even: how much would we need to scale total volume by?
+    const total_net_per_unit = am_detail.com_rows.reduce((s,r)=>s+r.net_songa*r.vol,0);
+    const total_vol = am_detail.com_rows.reduce((s,r)=>s+r.vol, 0);
+    if(total_net_per_unit > 0 && total_vol > 0) {
+      const avg_net_per_unit = total_net_per_unit / total_vol;
+      be_val = Math.max(0, (total_cost - pm_rev_day) / avg_net_per_unit);
+      be_unit = 'equiv. kg-units/day';
+    }
+  } else if(MODE === 'logistics') {
+    if(LOG_MODEL === 'baas_taas' && am_detail.tariff) {
+      const hub_share_pct = +document.getElementById('r-log-hub-share').value / 100;
+      const net_hub_per_kgkm = am_detail.tariff * hub_share_pct;
+      if(net_hub_per_kgkm > 0) {
+        be_val = (total_cost - pm_rev_day) / net_hub_per_kgkm;
+        be_unit = 'kg-km/day (transport)';
+      }
+    } else if(LOG_MODEL === 'baas_only' && pm_detail.hub_margin_per_swap) {
+      // BaaS-only: how many swaps/day to cover all hub costs?
+      const net_per_swap = pm_detail.hub_margin_per_swap;
+      if(net_per_swap > 0) {
+        be_val = total_cost / net_per_swap;
+        be_unit = 'swaps/day to break even';
+      }
+    }
+  }
+
+  return { am_rev_day, pm_rev_day, total_rev, capex_day, opex_day, total_cost, net_day,
+           trike_daily, bat_daily, maint_day, elec_am, elec_pm, log_hub_capex_day,
+           am_detail, pm_detail, be_val, be_unit, nT, WD, FX, c,
+           am_drv_pay, baas_tariff_swap, energy_cost_swap, swaps, baas_margin };
+}
+
+// ════════════════════════════════════════════════════════════════
+//  RENDER
+// ════════════════════════════════════════════════════════════════
+function upd() {
+  // Update all display values from sliders
+  ['wdays','rate','bat-kwh','trk-mo','eff','maint','drv','pf','loss','vol','km',
+   'trikes','log-tariff','log-drv','rides','load','ride-km','empty-km','trikes-log',
+   'swaps','kwh-swap','baas-margin','pm-rides','pm-load','pm-km','taas-tariff','trikes-com',
+   'grain-drv','grain-vol','grain-km','produce-drv','produce-vol','produce-km','produce-loss',
+   'inputs-drv','inputs-vol','inputs-km','fuel-drv','fuel-vol','fuel-km',
+   'custom-drv','custom-vol','custom-km',
+   'log-cabinets','log-swaps','log-baas-margin','log-hub-share'].forEach(id => {
+    const el = document.getElementById('r-'+id);
+    if(!el) return;
+    const v = +el.value;
+    const vEl = document.getElementById('v-'+id);
+    if(!vEl) return;
+    if(id==='rate')       vEl.textContent = v+'%';
+    else if(id==='bat-kwh') vEl.textContent = v.toFixed(1);
+    else if(id==='maint')   vEl.textContent = v.toFixed(1)+'%';
+    else if(id==='eff')     vEl.textContent = v.toFixed(1);
+    else if(id==='baas-margin'||id==='log-baas-margin'||id==='log-hub-share') vEl.textContent = v+'%';
+    else if(id==='kwh-swap') vEl.textContent = v.toFixed(1);
+    else if(id==='log-drv') vEl.textContent = v+'%';
+    else if(id==='drv'||id==='pf'||id==='log-tariff'||id==='taas-tariff') vEl.textContent = v.toFixed(2);
+    else if(id==='loss'||id==='produce-loss') vEl.textContent = v.toFixed(1)+'%';
+    else if(id.endsWith('-drv')) vEl.textContent = v.toFixed(2);
+    else                   vEl.textContent = v;
+  });
+
+  // Currency labels
+  const c = cur(), FX = fx();
+  document.getElementById('fx-hint').textContent = c+'/USD';
+  document.getElementById('elec-unit-lbl').textContent = c+'/kWh';
+  ['farm-unit','off-unit','drv-unit','pf-unit'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = c+'/L';
+  });
+  document.getElementById('log-unit').textContent = c+'/kg-km';
+  document.getElementById('taas-tariff-unit').textContent = c+'/kg-km';
+  // Commodity unit labels
+  ['grain','produce','inputs'].forEach(k => {
+    ['farm','off','drv'].forEach(t => { const el=document.getElementById(k+'-'+t+'-unit'); if(el) el.textContent=c+'/kg'; });
+  });
+  ['fuel'].forEach(k => {
+    ['farm','off','drv'].forEach(t => { const el=document.getElementById(k+'-'+t+'-unit'); if(el) el.textContent=c+'/L'; });
+  });
+  ['custom'].forEach(k => {
+    ['farm','off'].forEach(t => { const el=document.getElementById(k+'-'+t+'-unit'); if(el) el.textContent=c+'/unit'; });
+    const dEl=document.getElementById('custom-drv-unit'); if(dEl) dEl.textContent=c+'/unit';
+  });
+
+  // Spread display
+  if(MODE === 'trader' && BASELOAD === 'dairy') {
+    const farm = +document.getElementById('n-farm-price').value;
+    const off  = +document.getElementById('n-off-price').value;
+    const loss = +document.getElementById('r-loss').value/100;
+    const spread = off*(1-loss) - farm;
+    document.getElementById('d-spread').textContent = f(spread,2)+' '+c+'/L (after '+document.getElementById('r-loss').value+'% loss)';
+  }
+
+  const R = calc();
+
+  // ── Logistics demand summary fields ──────────────────────────
+  if(MODE === 'logistics' && R.am_detail && R.am_detail.kgkm_day !== undefined) {
+    const d = R.am_detail;
+    const c2 = cur();
+    const totalkm_el = document.getElementById('d-totalkm');
+    const kgkm_el    = document.getElementById('d-kgkm');
+    const gross_el   = document.getElementById('d-loggross');
+    const net_el     = document.getElementById('d-lognet');
+    if(totalkm_el) totalkm_el.textContent = f(d.total_km_day || (d.rides*(+document.getElementById('r-ride-km').value + +document.getElementById('r-empty-km').value)));
+    if(kgkm_el)    kgkm_el.textContent    = f(d.kgkm_day);
+    if(gross_el)   gross_el.textContent   = c2 + ' ' + f(d.gross);
+    if(net_el)     net_el.textContent     = c2 + ' ' + f(R.am_rev_day);
+  }
+
+  // ── KPIs ──────────────────────────────────────────────────────
+  document.getElementById('k-rev-am').textContent = f(R.am_rev_day);
+  document.getElementById('k-rev-am').className   = 'kpi-val'+(R.am_rev_day>0?' pos':'');
+  document.getElementById('k-rev-am-u').textContent = MODE==='logistics' ? (LOG_MODEL==='baas_taas' ? R.c+'/trike/day (TaaS share)' : R.c+'/trike/day (hub)') : R.c+'/trike/day (morning)';
+  // BaaS per-swap readout
+  if(AFTERNOON === 'baas' && MODE === 'trader') {
+    const c = R.c;
+    const el1 = document.getElementById('v-baas-tariff-swap');
+    const el2 = document.getElementById('v-baas-energy-swap');
+    const el3 = document.getElementById('v-baas-margin-swap');
+    if(el1) el1.textContent = c + ' ' + f(R.baas_tariff_swap, 1);
+    if(el2) el2.textContent = c + ' ' + f(R.energy_cost_swap, 1);
+    if(el3) el3.textContent = c + ' ' + f(R.baas_tariff_swap - R.energy_cost_swap, 1);
+  }
+  document.getElementById('k-rev-pm').textContent = R.pm_rev_day > 0 ? f(R.pm_rev_day) : (MODE==='logistics'?'0':(AFTERNOON==='none'?'—':'0'));
+  document.getElementById('k-rev-pm').className   = 'kpi-val'+(R.pm_rev_day>0?' pos':'');
+  document.getElementById('k-rev-pm-u').textContent = MODE==='logistics' ? R.c+'/trike/day (BaaS charging)' : R.c+'/trike/day (afternoon)';
+  document.getElementById('k-capex').textContent  = f(R.capex_day);
+  document.getElementById('k-opex').textContent   = f(R.opex_day);
+  const netCls = R.net_day>50?'kpi-val pos':R.net_day<-50?'kpi-val neg':'kpi-val';
+  document.getElementById('k-net').textContent    = (R.net_day>=0?'+':'')+f(R.net_day);
+  document.getElementById('k-net').className      = netCls;
+  document.getElementById('k-net-u').textContent  = R.c+' net / trike / day';
+  document.getElementById('k-be').textContent     = R.be_val!==null ? f(R.be_val) : '—';
+  document.getElementById('k-be-u').textContent   = R.be_unit || '';
+
+  // ── Verdict ──────────────────────────────────────────────────
+  const vb = document.getElementById('verdict-box');
+  const margin_pct = R.total_rev > 0 ? R.net_day / R.total_rev * 100 : -100;
+  if(R.net_day > 50) {
+    vb.className = 'verdict viable';
+    document.getElementById('v-head').textContent = `Viable — net ${R.c} ${f(R.net_day)}/trike/day`;
+    document.getElementById('v-body').innerHTML = `Margin: ${margin_pct.toFixed(0)}% of revenue.`+(R.be_val!==null?` Break-even at ${f(R.be_val)} ${R.be_unit}.`:'')+` With ${R.nT} trike${R.nT>1?'s':''}, that is ${R.c} ${f(R.net_day*R.nT*R.WD)}/month before fleet hub OPEX.`;
+  } else if(R.net_day >= -50) {
+    vb.className = 'verdict marginal';
+    document.getElementById('v-head').textContent = `Break-even (± ${R.c} 50/day)`;
+    document.getElementById('v-body').innerHTML = `Net is ${R.c} ${f(Math.abs(R.net_day))}/day ${R.net_day<0?'below':'above'} zero. Any shortfall in volume or spread makes this loss-making.`+(R.be_val!==null?` Break-even: ${f(R.be_val)} ${R.be_unit}.`:'');
+  } else {
+    vb.className = 'verdict loss';
+    document.getElementById('v-head').textContent = `Not viable — loss of ${R.c} ${f(-R.net_day)}/trike/day`;
+    document.getElementById('v-body').innerHTML = `Total cost: ${R.c} ${f(R.total_cost)}/day. Total revenue: ${R.c} ${f(R.total_rev)}/day.`+(R.be_val!==null?` Break-even at ${f(R.be_val)} ${R.be_unit}.`:'');
+  }
+
+  // ── Songa waterfall ──────────────────────────────────────────
+  const sWF = [];
+  if(MODE==='trader' && BASELOAD==='dairy') {
+    const d = R.am_detail;
+    sWF.push({ l:'Offtaker price × volume', v: d.off_p*(1-d.loss)*d.vol, col:'#1D9E75', rev:true });
+    sWF.push({ l:`Paid to farmers (${d.vol} L × ${R.c} ${f(d.farm_p,2)})`, v: -d.farm_p*d.vol, col:'#c0411a' });
+    sWF.push({ l:`Driver commission (${R.c} ${f(d.drv_c,2)}/L)`, v: -d.drv_c*d.vol, col:'#c0411a' });
+    sWF.push({ l:`Platform fee (${R.c} ${f(d.pf_c,2)}/L)`, v: -d.pf_c*d.vol, col:'#8a6a00' });
+  } else if(MODE==='trader' && BASELOAD==='multi') {
+    const COM_NAMES = { grain:'Grain/cereals', produce:'Fresh produce', inputs:'Livestock inputs', fuel:'Fuel/energy', custom:document.getElementById('n-custom-name').value||'Custom' };
+    if(R.am_detail.com_rows && R.am_detail.com_rows.length > 0) {
+      R.am_detail.com_rows.forEach(r => {
+        const name = COM_NAMES[r.key] || r.key;
+        sWF.push({ l:`${name}: revenue (${f(r.vol)} × ${R.c}${f(r.op*(1-r.loss),2)})`, v: r.op*(1-r.loss)*r.vol, col:'#1D9E75', rev:true });
+        sWF.push({ l:`${name}: farmers + driver cost`, v: -(r.fp + r.drv)*r.vol, col:'#c0411a' });
+      });
+    } else {
+      sWF.push({ l:'No commodities active', v: 0, col:'#888', rev:true });
+    }
+  } else if(MODE==='logistics') {
+    const d = R.am_detail;
+    // Transport flow — always show demand; hub revenue depends on model
+    sWF.push({ l:`Transport demand (${f(d.kgkm_day)} kg-km/day @ ${R.c}${f(d.tariff,3)}/kg-km)`, v: d.gross, col:'#aaa', rev:true });
+    sWF.push({ l:`Driver keeps (commission — not hub revenue)`, v: -d.gross, col:'#aaa' }); // nets to 0 in BaaS-only
+    if(LOG_MODEL === 'baas_taas') {
+      const hub_share = +document.getElementById('r-log-hub-share').value / 100;
+      sWF.push({ l:`Hub TaaS share (${Math.round(hub_share*100)}% of transport tariff)`, v: R.am_rev_day, col:'#1D9E75', rev:true });
+      sWF.push({ l:`Driver commission (${Math.round(d.drv_pct*100)}% of tariff)`, v: -R.am_drv_pay, col:'#c0411a' });
+    }
+    // BaaS hub — always present in logistics mode
+    const pd = R.pm_detail;
+    sWF.push({ l:`BaaS hub tariff (${pd.hub_swaps_total} swaps × ${R.c}${f(pd.hub_baas_tariff||0,0)}/swap)`, v: R.pm_rev_day, col:'#1A5FA8', rev:true });
+    sWF.push({ l:'Electricity — transport + hub swaps', v: -(R.elec_am + R.elec_pm), col:'#555' });
+    sWF.push({ l:'Charging cabinet CAPEX annuity', v: -R.log_hub_capex_day, col:'#5a3fa0' });
+  }
+  if(MODE === 'trader') {
+    if(AFTERNOON==='baas') {
+      const margin_per_swap = R.baas_tariff_swap - R.energy_cost_swap;
+      sWF.push({ l:`BaaS tariff revenue (${R.swaps} swaps × ${R.c}${f(R.baas_tariff_swap,1)}/swap)`, v: R.pm_rev_day, col:'#1A5FA8', rev:true });
+      sWF.push({ l:`Electricity — morning route`, v: -R.elec_am, col:'#555' });
+      sWF.push({ l:`Electricity — afternoon swaps`, v: -R.elec_pm, col:'#555' });
+    } else if(AFTERNOON==='taas') {
+      sWF.push({ l:'TaaS afternoon revenue', v: R.pm_rev_day, col:'#1A5FA8', rev:true });
+      sWF.push({ l:'Electricity — full day', v: -(R.elec_am+R.elec_pm), col:'#555' });
+    } else {
+      sWF.push({ l:'Electricity — morning route', v: -R.elec_am, col:'#555' });
+    }
+  }
+  sWF.push({ l:'Trike CAPEX annuity', v: -R.trike_daily, col:'#5a3fa0' });
+  sWF.push({ l:'Battery CAPEX annuity', v: -R.bat_daily, col:'#5a3fa0' });
+  sWF.push({ l:'Maintenance', v: -R.maint_day, col:'#c0411a' });
+
+  renderWF('wf-hub', sWF, R.net_day, R.c);
+
+  // ── Driver waterfall ──────────────────────────────────────────
+  const dWF = [];
+  if(MODE==='trader' && BASELOAD==='dairy') {
+    const d = R.am_detail;
+    dWF.push({ l:`Commission income (${R.c} ${f(d.drv_c,2)}/L × ${d.vol} L)`, v: d.drv_c*d.vol, col:'#1D9E75', rev:true });
+  } else if(MODE==='trader' && BASELOAD==='multi') {
+    if(R.am_detail.com_rows && R.am_detail.com_rows.length > 0) {
+      R.am_detail.com_rows.forEach(r => {
+        const COM_NAMES = { grain:'Grain', produce:'Produce', inputs:'Inputs', fuel:'Fuel', custom:document.getElementById('n-custom-name').value||'Custom' };
+        dWF.push({ l:`${COM_NAMES[r.key]||r.key}: commission (${R.c}${f(r.drv,2)} × ${f(r.vol)})`, v: r.drv*r.vol, col:'#1D9E75', rev:true });
+      });
+    }
+  } else if(MODE==='logistics') {
+    const d = R.am_detail;
+    if(LOG_MODEL === 'baas_only') {
+      dWF.push({ l:`Driver keeps full transport tariff (${Math.round(d.drv_pct*100)}%+ of ${R.c}${f(d.tariff,3)}/kg-km)`, v: d.gross, col:'#1D9E75', rev:true });
+    } else {
+      dWF.push({ l:`Driver commission (${Math.round(d.drv_pct*100)}% of tariff)`, v: R.am_drv_pay, col:'#1D9E75', rev:true });
+    }
+  }
+  const drv_net = MODE==='trader' && BASELOAD==='dairy' ? R.am_detail.drv_c*R.am_detail.vol : R.am_drv_pay;
+  renderWF('wf-driver', dWF, drv_net, R.c, true);
+
+  // ── Fleet summary ─────────────────────────────────────────────
+  const fleet_card = document.getElementById('card-fleet');
+  if(R.nT > 1) {
+    fleet_card.style.display = '';
+    document.getElementById('fleet-kpis').innerHTML = [
+      { l:'Fleet size', v: R.nT, u:'trikes', cls:'' },
+      { l:'Net / month', v: R.net_day*R.nT*R.WD, u:R.c, cls: R.net_day>0?'pos':'neg' },
+      { l:'Total monthly revenue', v: R.total_rev*R.nT*R.WD, u:R.c, cls:'pos' },
+      { l:'Total monthly cost', v: R.total_cost*R.nT*R.WD, u:R.c, cls:'neg' },
+    ].map(k=>`<div class="kpi"><p class="kpi-lbl">${k.l}</p><p class="kpi-val ${k.cls}">${typeof k.v==='number'?(k.cls?f(k.v):k.v):k.v}</p><p class="kpi-unit">${k.u}</p></div>`).join('');
+  } else {
+    fleet_card.style.display = 'none';
+  }
+
+  // ── Heatmap ───────────────────────────────────────────────────
+  buildHeatmap(R);
+
+  // ── Model explanation ─────────────────────────────────────────
+  buildExplain(R);
+}
+
+function renderWF(id, rows, net, c, driverMode=false) {
+  const maxV = Math.max(...rows.map(r=>Math.abs(r.v)), Math.abs(net), 1);
+  let html = '';
+  rows.forEach(r => {
+    const pct = Math.min(Math.abs(r.v)/maxV*100, 100).toFixed(1);
+    const sign = r.v >= 0 ? '+' : '−';
+    const cls  = r.rev ? 'pos' : '';
+    html += `<div class="wf-row">
+      <div class="wf-label">${r.l}</div>
+      <div class="wf-bar-wrap">
+        <div class="wf-bar-track"><div class="wf-bar" style="width:${pct}%;background:${r.col}">&nbsp;</div></div>
+        <div class="wf-amt ${cls}">${sign} ${c} ${f(Math.abs(r.v))}</div>
+      </div>
+    </div>`;
+  });
+  html += `<hr class="wf-sep">
+  <div class="wf-row wf-total">
+    <div class="wf-label">${driverMode?'Driver net/day':'Net / day'}</div>
+    <div class="wf-bar-wrap">
+      <div class="wf-bar-track"><div class="wf-bar" style="width:${Math.min(Math.abs(net)/maxV*100,100).toFixed(1)}%;background:${net>0?'#1D9E75':'#c0411a'}">&nbsp;</div></div>
+      <div class="wf-amt ${net>=0?'pos':'neg'}">${net>=0?'+':'−'} ${c} ${f(Math.abs(net))}</div>
+    </div>
+  </div>`;
+  document.getElementById(id).innerHTML = html;
+}
+
+function hmColor(net) {
+  if(net > 500)  return { bg:'#0a4d3a', fg:'#fff' };
+  if(net > 50)   return { bg:'#1D9E75', fg:'#fff' };
+  if(net >= -50) return { bg:'#e8e4dc', fg:'#5a5750' };
+  if(net > -500) return { bg:'#f5c4b3', fg:'#4a1b0c' };
+  return               { bg:'#c0411a', fg:'#fff' };
+}
+
+function buildHeatmap(R) {
+  const c = R.c;
+  let html = '';
+
+  if(MODE === 'trader' && BASELOAD === 'dairy') {
+    // Rows: volume 100→1200 step 100 | Cols: spread scaled to currency
+    const sc = _prevScale;
+    const spreadStep = sc >= 5 ? 5 : sc >= 1 ? 0.5 : sc >= 0.01 ? 0.05 : 0.005;
+    const spreadMin  = Math.round(1 * sc / spreadStep) * spreadStep;
+    const spreadMax  = Math.round(8 * sc / spreadStep) * spreadStep;
+    const vols   = []; for(let v=100; v<=1200; v+=100) vols.push(v);
+    const spreads= []; for(let s=spreadMin; s<=spreadMax+spreadStep*0.01; s=Math.round((s+spreadStep)*1e6)/1e6) spreads.push(s);
+    const curVol = +document.getElementById('r-vol').value;
+    const curSpread = R.am_detail.off_p*(1-R.am_detail.loss) - R.am_detail.farm_p - R.am_detail.drv_c - R.am_detail.pf_c;
+
+    document.getElementById('hm-axis-desc').innerHTML = `<strong>Rows</strong> = morning volume (L/day) · <strong>Cols</strong> = net spread (after driver & platform fee) · ★ = current scenario`;
+
+    const decPlaces = spreadStep < 1 ? (spreadStep < 0.1 ? 2 : 1) : 0;
+    html += `<thead><tr><th class="hm-th row-hdr">L/day ↓ · ${c}/L →</th>`;
+    spreads.forEach(s => html += `<th class="hm-th col-hdr">${s.toFixed(decPlaces)}</th>`);
+    html += '</tr></thead><tbody>';
+
+    vols.slice().reverse().forEach(v => {
+      const isCurRow = Math.abs(v - curVol) < 60;
+      html += `<tr><td class="hm-td row-lbl">${v.toLocaleString()}</td>`;
+      spreads.forEach(s => {
+        const net = s*v - R.total_cost + R.pm_rev_day; // pm_rev_day included
+        const { bg, fg } = hmColor(net);
+        const isCur = isCurRow && Math.abs(s - curSpread) < 0.3 * sc;
+        const lbl = Math.abs(net)>=1000 ? (net>=0?'+':'−')+f(Math.abs(net)/1000,1)+'k' : (net>=0?'+':'')+f(net);
+        const fw = isCur ? 'font-weight:700;outline:2px solid var(--text);outline-offset:-2px;' : '';
+        html += `<td class="hm-td" style="background:${bg};color:${fg};${fw}" title="${v}L × ${c}${s.toFixed(decPlaces)}/L → ${c}${f(net)}/day">${lbl}${isCur?'★':''}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody>';
+
+  } else if(MODE === 'trader' && BASELOAD === 'multi') {
+    // Heatmap: total morning volume (sum) vs blended net spread per unit
+    // Rows: scale factor 0.4→2.0 | Cols: blended net margin per kg (from 0 to current×2)
+    const baseVol = R.am_detail.com_rows ? R.am_detail.com_rows.reduce((s,r)=>s+r.vol,0) : 0;
+    const baseRev  = R.am_rev_day;
+    const baseSpread = baseVol > 0 ? baseRev / baseVol : 0;
+
+    document.getElementById('hm-axis-desc').innerHTML = `<strong>Rows</strong> = total morning volume (all commodities, kg-eq/day) · <strong>Cols</strong> = blended net margin/unit · ★ = current scenario`;
+
+    if(baseVol === 0 || !R.am_detail.com_rows || R.am_detail.com_rows.length === 0) {
+      document.getElementById('hm-table').innerHTML = '<tr><td style="padding:16px;color:var(--text-3);font-size:12px">Enable at least one commodity above to see the heatmap.</td></tr>';
+      return;
+    }
+
+    const sc2b = _prevScale;
+    const sRange = 2 * sc2b, sStep = sc2b >= 5 ? 5 : 0.5;
+    const vols = []; for(let s=0.3; s<=2.1; s+=0.1) vols.push(Math.round(baseVol*s));
+    const spreads = []; for(let s=-sRange; s<=sRange*4+sStep*0.01; s=Math.round((s+sStep)*1e4)/1e4) spreads.push(Math.round((baseSpread+s)*1e4)/1e4);
+    // Show spreads centred on current, only positive-ish range
+    const posSpreds = spreads.filter(s=>s>-1);
+
+    const sc2 = _prevScale;
+    const decP2 = sc2 >= 5 ? 0 : sc2 >= 1 ? 1 : 2;
+    html += `<thead><tr><th class="hm-th row-hdr">Vol (kg) ↓ · Net/unit (${c}) →</th>`;
+    posSpreds.forEach(s => html += `<th class="hm-th col-hdr">${s.toFixed(decP2)}</th>`);
+    html += '</tr></thead><tbody>';
+
+    vols.slice().reverse().forEach(v => {
+      const isCurRow = Math.abs(v - baseVol) < baseVol * 0.07;
+      html += `<tr><td class="hm-td row-lbl">${(v/1000).toFixed(1)}k</td>`;
+      posSpreds.forEach(s => {
+        const net = s*v - R.total_cost + R.pm_rev_day;
+        const { bg, fg } = hmColor(net);
+        const isCur = isCurRow && Math.abs(s - baseSpread) < 0.3;
+        const lbl = Math.abs(net)>=1000?(net>=0?'+':'−')+f(Math.abs(net)/1000,1)+'k':(net>=0?'+':'')+f(net);
+        const fw = isCur?'font-weight:700;outline:2px solid var(--text);outline-offset:-2px;':'';
+        html += `<td class="hm-td" style="background:${bg};color:${fg};${fw}">${lbl}${isCur?'★':''}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody>';
+
+  } else if(MODE === 'logistics') {
+    // Rows: kg-km demand/day | Cols: net tariff to Songa (after driver share)
+    // This directly answers: "Is TaaS viable at this demand × price?"
+    const curKgKm   = R.am_detail.kgkm_day || 0;
+    const curTariff = +document.getElementById('r-log-tariff').value;
+    const drv_pct   = +document.getElementById('r-log-drv').value / 100;
+    const curNetT   = curTariff * (1 - drv_pct);
+
+    // Build a range centred on current kg-km demand
+    const kgkm_base = Math.max(curKgKm, 500);
+    const kgkm_rows = [];
+    for(let s = 0.2; s <= 2.4; s += 0.2) kgkm_rows.push(Math.round(kgkm_base * s / 100) * 100 || 100);
+
+    // Net tariff to Songa (after driver): scaled to currency
+    const scL = _prevScale;
+    const tStep  = scL >= 5 ? 0.5 : scL >= 1 ? 0.05 : 0.005;
+    const tMin   = Math.round(0.05 * scL / tStep) * tStep;
+    const tMax   = Math.round(0.80 * scL / tStep) * tStep;
+    const net_tariffs = [];
+    for(let t=tMin; t<=tMax+tStep*0.01; t=Math.round((t+tStep)*1e6)/1e6) net_tariffs.push(t);
+    const tDec = tStep < 1 ? (tStep < 0.1 ? 3 : 2) : 1;
+
+    document.getElementById('hm-axis-desc').innerHTML = `<strong>Rows</strong> = daily transport demand (kg-km/day) · <strong>Cols</strong> = net tariff after driver share (${c}/kg-km) · ★ = current scenario`;
+
+    html += `<thead><tr><th class="hm-th row-hdr">kg-km/day ↓ · ${c}/kg-km →</th>`;
+    net_tariffs.forEach(t => html += `<th class="hm-th col-hdr">${t.toFixed(tDec)}</th>`);
+    html += '</tr></thead><tbody>';
+
+    // Fixed costs: CAPEX + maint + electricity (electricity held constant — routes fixed)
+    const fixed_cost = R.capex_day + R.maint_day + R.elec_am + R.elec_pm;
+
+    kgkm_rows.slice().reverse().forEach(kd => {
+      const isCurRow = Math.abs(kd - curKgKm) < kgkm_base * 0.12;
+      html += `<tr><td class="hm-td row-lbl">${kd>=1000?(kd/1000).toFixed(1)+'k':kd}</td>`;
+      net_tariffs.forEach(t => {
+        // For each (demand, net tariff) cell: revenue = t×kd + hub add-on; costs fixed
+        const cell_rev = t * kd + R.pm_rev_day;
+        const cell_net = cell_rev - fixed_cost;
+        const { bg, fg } = hmColor(cell_net);
+        const isCur = isCurRow && Math.abs(t - curNetT) < 0.03 * scL;
+        const lbl = Math.abs(cell_net)>=1000?(cell_net>=0?'+':'−')+f(Math.abs(cell_net)/1000,1)+'k':(cell_net>=0?'+':'')+f(cell_net);
+        const fw = isCur?'font-weight:700;outline:2px solid var(--text);outline-offset:-2px;':'';
+        html += `<td class="hm-td" style="background:${bg};color:${fg};${fw}">${lbl}${isCur?'★':''}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody>';
+  }
+
+  document.getElementById('hm-table').innerHTML = html;
+}
+
+function buildExplain(R) {
+  const c = R.c, FX = R.FX;
+  let html = '';
+  const capex_expl = `<p><strong>CAPEX recovery</strong> via monthly annuity at <b>${+document.getElementById('r-rate').value}% / year</b>: ${+document.getElementById('r-trk-mo').value}-month trike (${c} ${f(+document.getElementById('n-trike').value * FX)}) + 60-month battery (${document.getElementById('r-bat-kwh').value} kWh × ${c} ${f(+document.getElementById('n-bat-kwh-usd').value * FX)}/kWh = ${c} ${f(+document.getElementById('r-bat-kwh').value * +document.getElementById('n-bat-kwh-usd').value * FX)}).</p>`;
+  if(MODE === 'trader' && BASELOAD === 'dairy') {
+    html = `<p><strong>Trader + dairy model.</strong> Milk bought at <b>${c} ${f(R.am_detail.farm_p,2)}/L</b>, absorbs <b>${f(R.am_detail.loss*100,1)}% transit loss</b>, sells at <b>${c} ${f(R.am_detail.off_p,2)}/L</b>. Gross spread: <b>${c} ${f(R.am_detail.spread_gross,2)}/L</b>. Driver gets <b>${c} ${f(R.am_detail.drv_c,2)}/L</b>, platform fee <b>${c} ${f(R.am_detail.pf_c,2)}/L</b>. Net: <b>${c} ${f(R.am_detail.net_songa_l,2)}/L × ${f(R.am_detail.vol)} L = ${c} ${f(R.am_rev_day)}/day</b>.</p>`;
+    html += capex_expl;
+  } else if(MODE === 'trader' && BASELOAD === 'multi') {
+    const COM_NAMES = { grain:'Grain/cereals', produce:'Fresh produce', inputs:'Livestock inputs', fuel:'Fuel/energy', custom:document.getElementById('n-custom-name').value||'Custom' };
+    if(R.am_detail.com_rows && R.am_detail.com_rows.length > 0) {
+      const rows = R.am_detail.com_rows.map(r => `<b>${COM_NAMES[r.key]||r.key}:</b> net spread ${c} ${f(r.net_songa,2)}/unit × ${f(r.vol)} units = <b>${c} ${f(r.net_songa*r.vol)}/day</b>`).join('; ');
+      html = `<p><strong>Mixed commodity model.</strong> ${rows}. Total morning revenue: <b>${c} ${f(R.am_rev_day)}/day</b>.</p>`;
+    } else {
+      html = `<p><strong>Mixed commodity model.</strong> No commodities selected yet — enable at least one commodity in Step 4.</p>`;
+    }
+    html += capex_expl;
+  } else if(MODE === 'logistics') {
+    const d = R.am_detail;
+    const pd = R.pm_detail || {};
+    if(LOG_MODEL === 'baas_only') {
+      html = `<p><strong>BaaS-only hub.</strong> Transport demand: <b>${f(d.kgkm_day)} kg-km/day</b> (${d.rides} trips × ${f(d.load_kg)} kg × ${f(d.r_km)} km) at tariff ${c} ${f(d.tariff,3)}/kg-km. TaaS revenue goes to the driver — the hub earns <b>zero</b> from transport. The hub survives on BaaS charging alone.</p>`;
+    } else {
+      const hub_share = +document.getElementById('r-log-hub-share').value / 100;
+      html = `<p><strong>BaaS + TaaS hub.</strong> Transport demand: <b>${f(d.kgkm_day)} kg-km/day</b>. Gross tariff: <b>${c} ${f(d.gross)}/day</b>. Hub keeps ${Math.round(hub_share*100)}% = <b>${c} ${f(R.am_rev_day)}/day</b>; driver commission: ${Math.round(d.drv_pct*100)}% = <b>${c} ${f(R.am_drv_pay)}/day</b>.</p>`;
+    }
+    if(pd.hub_swaps_total) {
+      html += `<p><strong>BaaS charging hub.</strong> ${pd.cabinets} cabinet${pd.cabinets>1?'s':''} serving ${pd.hub_swaps_total} swap${pd.hub_swaps_total>1?'s':''}/day. Tariff: <b>${c} ${f(pd.hub_baas_tariff||0,0)}/swap</b> (energy ${c} ${f(pd.hub_energy_per_swap,0)} + ${Math.round(pd.hub_margin_pct*100)}% margin). Hub BaaS revenue: <b>${c} ${f(R.pm_rev_day)}/day</b>. Cabinet CAPEX: ${c} ${f(R.log_hub_capex_day,0)}/day.</p>`;
+    }
+  }
+  if(AFTERNOON==='baas') {
+    html += `<p><strong>BaaS afternoon.</strong> After the morning run, the trike's ${document.getElementById('r-bat-kwh').value} kWh battery pack is used for swap services. Songa charges <b>${c} ${f(R.baas_tariff_swap,0)}/swap</b> (energy cost ${c} ${f(R.energy_cost_swap,0)} + ${(R.baas_margin*100).toFixed(0)}% margin). At ${R.swaps} swaps/day, Songa earns <b>${c} ${f(R.pm_rev_day)}/day net of electricity</b>. The driver operates the swap service independently.</p>`;
+  }
+  document.getElementById('model-explain').innerHTML = html;
+}
+
+// ════════════════════════════════════════════════════════════════
+//  FORMULA ANNOTATIONS  (Task #3 — Option 2)
+//  Each entry = { title, desc, formula, refs }
+//  Formulas use Assumptions sheet cell references from v2 build:
+//    B6=currency, B7=FX rate, B8=symbol, B9=working days,
+//    B10=interest rate, B11=trike months, B12=trike USD,
+//    B13=battery kWh, B14=battery $/kWh, B15=maint%
+//    Trader sheet rows (illustrative for dairy mode):
+//    B5=farm price, B6=offtaker price, B7=loss%, B8=driver/L,
+//    B9=platform fee/L, B10=volume L/day, B11=km/day
+// ════════════════════════════════════════════════════════════════
+const FORMULA_REGISTRY = {
+  'rev-am': {
+    title: 'Morning revenue',
+    desc: 'Net revenue Songa earns from the morning collection / transport run, per trike per working day.',
+    formulas: {
+      trader_dairy: {
+        label: 'Trader — dairy mode',
+        formula: `= (B6*(1-B7) - B5 - B8 - B9) * B10`,
+        readable: `= (Offtaker_price × (1−Loss%) − Farm_price − Driver_commission − Platform_fee) × Volume_L`,
+        excel: `='Trader Model'!B20`,
+        refs: [
+          'B5 — Farm gate price (Assumptions → Trader Model B5)',
+          'B6 — Offtaker price (Trader Model B6)',
+          'B7 — Transit loss % (Trader Model B7)',
+          'B8 — Driver commission per litre (Trader Model B8)',
+          'B9 — Platform fee per litre (Trader Model B9)',
+          'B10 — Daily volume (litres) (Trader Model B10)',
+        ]
+      },
+      logistics_baas_only: {
+        label: 'Logistics — BaaS-only mode',
+        formula: `= 0  {Hub earns zero from transport — driver keeps full tariff}`,
+        readable: `Morning TaaS revenue = 0 in BaaS-only mode`,
+        excel: `='Logistics Model'!B20`,
+        refs: ['In BaaS-only mode the full transport tariff passes to the driver. Hub income is captured in Afternoon Revenue (BaaS charging).']
+      },
+      logistics_baas_taas: {
+        label: 'Logistics — BaaS + TaaS mode',
+        formula: `= B_tariff * (B_rides * B_load_kg * B_ride_km) * B_hub_share_pct`,
+        readable: `= Tariff × (Rides × Load_kg × Distance_km) × Hub_share%`,
+        excel: `='Logistics Model'!B20`,
+        refs: [
+          'B_tariff — Transport tariff (Logistics Model)',
+          'B_rides — Rides per day',
+          'B_load_kg — Load per ride (kg)',
+          'B_ride_km — Distance per ride (km)',
+          'B_hub_share_pct — Hub share of tariff (%)',
+        ]
+      }
+    }
+  },
+  'rev-pm': {
+    title: 'Afternoon revenue',
+    desc: 'Revenue earned by the hub after the morning run — from BaaS (battery swaps) or TaaS (afternoon transport).',
+    formulas: {
+      baas: {
+        label: 'BaaS (battery swap service)',
+        formula: `= B_swaps * (B_elec_rate * B_kwh_per_swap * (1 + B_baas_margin_pct))`,
+        readable: `= Swaps/day × Electricity_rate × kWh/swap × (1 + Margin%)`,
+        excel: `='Trader Model'!B30`,
+        refs: [
+          'B_swaps — Swaps per trike per day (Assumptions)',
+          'B_elec_rate — Electricity rate (local currency / kWh)',
+          'B_kwh_per_swap — kWh dispensed per swap',
+          'B_baas_margin_pct — BaaS margin above energy cost (%)',
+          'Tariff per swap = electricity_rate × kWh/swap × (1 + margin%)',
+        ]
+      },
+      taas_songa: {
+        label: 'TaaS — platform-operated',
+        formula: `= B_pm_rides * B_pm_load * B_pm_km * B_taas_tariff`,
+        readable: `= PM_rides × PM_load_kg × PM_distance_km × TaaS_tariff`,
+        excel: `='Trader Model'!B31`,
+        refs: [
+          'B_pm_rides — Afternoon rides per day',
+          'B_pm_load — Load per afternoon ride (kg)',
+          'B_pm_km — Distance per afternoon ride (km)',
+          'B_taas_tariff — TaaS tariff (local currency / kg-km)',
+        ]
+      },
+      none: {
+        label: 'No afternoon use',
+        formula: `= 0`,
+        readable: `Afternoon revenue = 0 (no afternoon operation selected)`,
+        excel: `='Trader Model'!B30`,
+        refs: ['Switch to BaaS or TaaS mode to generate afternoon revenue.']
+      }
+    }
+  },
+  'capex': {
+    title: 'Total CAPEX cost (daily annuity)',
+    desc: 'Capital expenditure recovered via monthly annuity (PMT formula). Covers trike + battery, amortised over their respective useful lives.',
+    formulas: {
+      main: {
+        label: 'Standard PMT annuity',
+        formula: `= PMT(B10/12, B11, -(B12*B7)) / B9\n  + PMT(B10/12, 60, -(B13*B14*B7)) / B9`,
+        readable: `= Trike_annuity/month ÷ Working_days\n  + Battery_annuity/month ÷ Working_days`,
+        excel: `='Trader Model'!B40 + 'Trader Model'!B41`,
+        refs: [
+          'B7 — FX rate (Assumptions B7: auto-looked up from currency dropdown)',
+          'B9 — Working days per month (Assumptions B9)',
+          'B10 — Interest rate p.a. (Assumptions B10)',
+          'B11 — Trike loan term in months (Assumptions B11)',
+          'B12 — Trike cost in USD (Assumptions B12)',
+          'B13 — Battery kWh (Assumptions B13)',
+          'B14 — Battery cost per kWh in USD (Assumptions B14)',
+          'Battery life: 60 months (5 years, hardcoded — calendar-binding for 1 cycle/day)',
+          'FX rate formula: =IFERROR(INDEX(FX_RATES,MATCH(B6,FX_CODES,0)),1)',
+        ]
+      }
+    }
+  },
+  'opex': {
+    title: 'Total OPEX cost (energy + maintenance)',
+    desc: 'Daily operating expenditure: electricity for all km driven + monthly maintenance allowance.',
+    formulas: {
+      main: {
+        label: 'Morning + afternoon electricity + maintenance',
+        formula: `= (B_am_km / B_eff) * B_elec_rate\n  + (B_pm_km / B_eff) * B_elec_rate\n  + (B12*B7) * B15 / B9`,
+        readable: `= (Morning_km ÷ Efficiency_km_per_kWh) × Elec_rate\n  + (Afternoon_km ÷ Efficiency) × Elec_rate\n  + Trike_cost_local × Maint%_per_month ÷ Working_days`,
+        excel: `='Trader Model'!B50`,
+        refs: [
+          'B_eff — Trike efficiency (km / kWh)',
+          'B_am_km — Morning route distance (km)',
+          'B_pm_km — Afternoon route distance (km, 0 if BaaS or no afternoon)',
+          'B_elec_rate — Electricity rate (local currency / kWh)',
+          'B15 — Monthly maintenance as % of trike cost (Assumptions B15)',
+          'BaaS afternoon: energy cost = elec_rate × kWh/swap × swaps/day',
+        ]
+      }
+    }
+  },
+  'net': {
+    title: 'Net / trike / day',
+    desc: 'Net daily margin per trike after all CAPEX and OPEX. Positive = viable operation. This is Songa’s daily net before fleet-level hub overhead.',
+    formulas: {
+      main: {
+        label: 'Net daily margin',
+        formula: `= am_rev_day + pm_rev_day\n  - trike_capex_day - battery_capex_day\n  - maint_day - elec_am - elec_pm`,
+        readable: `= Total_revenue − Total_CAPEX_annuity − Total_OPEX`,
+        excel: `='Trader Model'!B60`,
+        refs: [
+          'am_rev_day — Morning revenue (see Morning revenue formula)',
+          'pm_rev_day — Afternoon revenue (see Afternoon revenue formula)',
+          'trike_capex_day — PMT(rate/12, trk_months, −trike_local) / working_days',
+          'battery_capex_day — PMT(rate/12, 60, −bat_local) / working_days',
+          'maint_day — trike_local × maint% / working_days',
+          'elec_am — (am_km ÷ eff) × elec_rate',
+          'elec_pm — varies by afternoon mode (BaaS or TaaS)',
+        ]
+      }
+    }
+  },
+  'be': {
+    title: 'Break-even volume',
+    desc: 'The minimum daily volume (litres, kg, or kg-km) needed to cover all costs with the current price assumptions.',
+    formulas: {
+      trader_dairy: {
+        label: 'Trader — dairy mode (break-even litres)',
+        formula: `= MAX(0, (total_cost − pm_rev_day) / net_songa_per_litre)`,
+        readable: `= (Total_daily_cost − Afternoon_revenue) ÷ Net_margin_per_litre`,
+        excel: `='Trader Model'!B65`,
+        refs: [
+          'total_cost — CAPEX_day + OPEX_day',
+          'pm_rev_day — Afternoon BaaS / TaaS revenue (reduces required morning volume)',
+          'net_songa_per_litre — Offtaker × (1−Loss) − Farm − Driver − Platform_fee',
+          'Afternoon revenue offsets fixed costs, reducing break-even volume',
+        ]
+      },
+      logistics: {
+        label: 'Logistics — BaaS-only mode (swaps/day)',
+        formula: `= total_cost / (hub_baas_tariff − hub_energy_per_swap)`,
+        readable: `= Total_daily_cost ÷ BaaS_margin_per_swap`,
+        excel: `='Logistics Model'!B65`,
+        refs: [
+          'hub_baas_tariff — tariff per swap = elec_rate × kWh/swap × (1 + margin%)',
+          'hub_energy_per_swap — electricity cost per swap = elec_rate × kWh/swap',
+          'BaaS margin per swap = tariff − energy_cost',
+        ]
+      }
+    }
+  }
+};
+
+function _getModeKey() {
+  if(MODE==='trader' && BASELOAD==='dairy') return 'trader_dairy';
+  if(MODE==='trader' && BASELOAD==='multi')  return 'trader_multi';
+  if(MODE==='logistics') return LOG_MODEL==='baas_taas' ? 'logistics_baas_taas' : 'logistics_baas_only';
+  return null;
+}
+
+function showFormula(kpiKey) {
+  const reg = FORMULA_REGISTRY[kpiKey];
+  if(!reg) return;
+  const panel = document.getElementById('formula-panel');
+  document.getElementById('fp-title').textContent = reg.title;
+  document.getElementById('fp-desc').textContent  = reg.desc;
+
+  // Pick the most relevant sub-formula
+  let entry = null;
+  if(kpiKey === 'rev-am') {
+    const mk = _getModeKey();
+    entry = reg.formulas[mk] || reg.formulas['trader_dairy'];
+  } else if(kpiKey === 'rev-pm') {
+    if(MODE==='logistics') entry = reg.formulas['baas'] || reg.formulas['none'];
+    else if(AFTERNOON==='baas')  entry = reg.formulas['baas'];
+    else if(AFTERNOON==='taas')  entry = reg.formulas[TAAS_OP==='songa'?'taas_songa':'baas'] || reg.formulas['baas'];
+    else entry = reg.formulas['none'];
+  } else if(kpiKey === 'be') {
+    entry = MODE==='logistics' ? reg.formulas['logistics'] : reg.formulas['trader_dairy'];
+  } else {
+    entry = reg.formulas['main'];
+  }
+
+  if(!entry) {
+    document.getElementById('fp-formula').textContent = '(No formula available for current mode)';
+    document.getElementById('fp-refs').innerHTML = '';
+  } else {
+    const label = entry.label ? `<b>${entry.label}</b><br>` : '';
+    document.getElementById('fp-formula').textContent =
+      (entry.readable || entry.formula) + (entry.excel ? '\n\n// Excel cell: ' + entry.excel : '');
+    document.getElementById('fp-refs').innerHTML =
+      label + (entry.refs||[]).map(r=>`· ${r}`).join('<br>');
+  }
+
+  panel.style.display = '';
+  panel.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function hideFormula() {
+  document.getElementById('formula-panel').style.display = 'none';
+}
+
+function copyFormula() {
+  const code = document.getElementById('fp-formula').textContent;
+  try {
+    navigator.clipboard.writeText(code).catch(() => _fallbackCopy(code));
+  } catch(e) { _fallbackCopy(code); }
+  const btn = document.querySelector('.fp-copy-btn');
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 1600);
+}
+
+function _fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity  = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  document.body.removeChild(ta);
+}
+
+// ════════════════════════════════════════════════════════════════
+//  JSON EXPORT  (Task #3 — Option 1)
+//  Serialises all current assumption values into a JSON object
+//  matching the Assumptions sheet structure in the Excel model.
+//  Paste into Excel VBA or a script to sync HTML defaults → Excel.
+// ════════════════════════════════════════════════════════════════
+function exportJSON() {
+  const g = id => { const el=document.getElementById(id); return el ? +el.value||el.value : null; };
+  const gs = id => { const el=document.getElementById(id); return el ? el.value : null; };
+
+  const config = {
+    _meta: {
+      tool: 'Songa Partner Viability Model',
+      exported: new Date().toISOString(),
+      mode: MODE,
+      baseload: BASELOAD,
+      afternoon: AFTERNOON,
+      taas_op: TAAS_OP,
+      log_model: LOG_MODEL,
+      note: 'Paste Assumptions values into Excel B-column rows 6-onwards. FX rate is auto-computed from currency code — update FX Reference sheet to change rates.'
+    },
+    assumptions: {
+      currency:         gs('sel-currency'),
+      fx_rate_to_usd:   g('n-fx'),
+      working_days_mo:  g('r-wdays'),
+      interest_rate_pct:g('r-rate'),
+      trike_loan_months:g('r-trk-mo'),
+      trike_cost_usd:   g('n-trike'),
+      battery_kwh:      g('r-bat-kwh'),
+      battery_cost_usd_per_kwh: g('n-bat-kwh-usd'),
+      maint_pct_per_mo: g('r-maint'),
+      efficiency_km_per_kwh: g('r-eff'),
+      electricity_rate_local_per_kwh: g('n-elec'),
+    },
+    trader_dairy: {
+      farm_price_local_per_L: g('n-farm-price'),
+      offtaker_price_local_per_L: g('n-off-price'),
+      transit_loss_pct: g('r-loss'),
+      driver_commission_local_per_L: g('r-drv'),
+      platform_fee_local_per_L: g('r-pf'),
+      volume_L_per_day: g('r-vol'),
+      route_km: g('r-km'),
+      num_trikes: g('r-trikes'),
+    },
+    baas_afternoon: {
+      swaps_per_trike_per_day: g('r-swaps'),
+      kwh_per_swap: g('r-kwh-swap'),
+      baas_margin_pct: g('r-baas-margin'),
+    },
+    taas_afternoon: {
+      pm_rides_per_day: g('r-pm-rides'),
+      pm_load_kg: g('r-pm-load'),
+      pm_distance_km: g('r-pm-km'),
+      taas_tariff_local_per_kgkm: g('r-taas-tariff'),
+    },
+    logistics: {
+      tariff_local_per_kgkm: g('r-log-tariff'),
+      driver_commission_pct: g('r-log-drv'),
+      rides_per_day: g('r-rides'),
+      load_kg_per_ride: g('r-load'),
+      ride_distance_km: g('r-ride-km'),
+      empty_km_per_ride: g('r-empty-km'),
+      hub_cabinets: g('r-log-cabinets'),
+      cabinet_cost_usd: g('n-log-cabinet-usd'),
+      swaps_per_cabinet_per_day: g('r-log-swaps'),
+      hub_baas_margin_pct: g('r-log-baas-margin'),
+      hub_taas_share_pct: g('r-log-hub-share'),
+      num_trikes: g('r-trikes-log'),
+    }
+  };
+
+  const json = JSON.stringify(config, null, 2);
+  _showJsonModal(json);
+}
+
+function _showJsonModal(json) {
+  let modal = document.getElementById('json-modal');
+  if(!modal) {
+    modal = document.createElement('div');
+    modal.id = 'json-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+    modal.innerHTML = `
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;width:100%;max-width:560px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.35)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border)">
+          <span style="font-weight:700;font-size:14px">📋 Config JSON — copy &amp; paste into Excel or script</span>
+          <button onclick="document.getElementById('json-modal').style.display='none'" style="border:none;background:none;cursor:pointer;font-size:18px;color:var(--text-3);line-height:1">✕</button>
+        </div>
+        <p style="font-size:11.5px;color:var(--text-2);margin:10px 18px 0;line-height:1.6">This JSON mirrors the <b>Assumptions sheet</b> in <code>Songa_Partner_Viability_Model.xlsx</code>. Use it to sync HTML defaults → Excel, or save as a scenario file.</p>
+        <div style="padding:12px 18px;flex:1;overflow:auto">
+          <textarea id="json-modal-ta" readonly style="width:100%;height:260px;font-family:'Courier New',monospace;font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--teal);resize:vertical;line-height:1.5"></textarea>
+        </div>
+        <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="_copyJsonModal()" style="padding:7px 16px;background:var(--teal);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:13px">Copy JSON</button>
+          <button onclick="document.getElementById('json-modal').style.display='none'" style="padding:7px 16px;background:var(--bg-input);color:var(--text-2);border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:13px">Close</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if(e.target===modal) modal.style.display='none'; });
+  }
+  document.getElementById('json-modal-ta').value = json;
+  modal.style.display = 'flex';
+}
+
+function _copyJsonModal() {
+  const ta = document.getElementById('json-modal-ta');
+  const text = ta.value;
+  try {
+    navigator.clipboard.writeText(text).catch(() => { ta.select(); try{document.execCommand('copy');}catch(e){} });
+  } catch(e) { ta.select(); try{document.execCommand('copy');}catch(err){} }
+  const btn = document.querySelector('#json-modal button');
+  // find copy button
+  const btns = document.querySelectorAll('#json-modal button');
+  btns.forEach(b => { if(b.textContent.includes('Copy')) { b.textContent='Copied!'; setTimeout(()=>b.textContent='Copy JSON',1600); } });
+}
+
+
+// ── Cell mapping: JSON path → Assumptions B-column row ──────────────────────
+const EXCEL_CELL_MAP = {
+  // A. Currency & Calendar
+  'assumptions.currency':                        'B6',
+  'assumptions.fx_rate_to_usd':                  'B7',  // FX rate override (local per 1 USD)
+  'assumptions.working_days_mo':                 'B9',
+  'assumptions.interest_rate_pct':               'B10',
+  // B. Trike & Battery CAPEX
+  'assumptions.trike_cost_usd':                  'B14',
+  'assumptions.trike_loan_months':               'B15',
+  'assumptions.battery_kwh':                     'B16',
+  'assumptions.battery_cost_usd_per_kwh':        'B17',
+  // C. Operating Costs
+  'assumptions.maint_pct_per_mo':                'B22',
+  'assumptions.efficiency_km_per_kwh':           'B23',
+  'assumptions.electricity_rate_local_per_kwh':  'B24',
+  // D. Trader — Dairy
+  'trader_dairy.num_trikes':                     'B28',
+  'trader_dairy.farm_price_local_per_L':         'B29',
+  'trader_dairy.offtaker_price_local_per_L':     'B30',
+  'trader_dairy.transit_loss_pct':               'B31',
+  'trader_dairy.driver_commission_local_per_L':  'B32',
+  'trader_dairy.platform_fee_local_per_L':       'B33',
+  'trader_dairy.volume_L_per_day':               'B34',
+  'trader_dairy.route_km':                       'B35',
+  // E. BaaS Afternoon
+  'baas_afternoon.kwh_per_swap':                 'B39',
+  'baas_afternoon.swaps_per_trike_per_day':      'B40',
+  'baas_afternoon.baas_margin_pct':              'B41',
+  // F. Logistics Hub
+  'logistics.num_trikes':                        'B45',
+  'logistics.tariff_local_per_kgkm':             'B46',
+  'logistics.driver_commission_pct':             'B47',
+  'logistics.rides_per_day':                     'B48',
+  'logistics.load_kg_per_ride':                  'B49',
+  'logistics.ride_distance_km':                  'B50',
+  'logistics.empty_km_per_ride':                 'B51',
+  // G. BaaS Charging Station
+  'logistics.hub_cabinets':                      'B55',
+  'logistics.cabinet_cost_usd':                  'B56',
+  'logistics.swaps_per_cabinet_per_day':         'B58',
+  'logistics.hub_baas_margin_pct':               'B59',
+  // H. BaaS+TaaS Mode
+  'logistics.hub_taas_share_pct':                'B63',
+};
+
+// Keys stored as fractions in Excel but exported as % from HTML (>= 1 means needs /100)
+const PCT_KEYS = new Set([
+  'assumptions.interest_rate_pct',
+  'assumptions.maint_pct_per_mo',
+  'trader_dairy.transit_loss_pct',
+  'baas_afternoon.baas_margin_pct',
+  'logistics.driver_commission_pct',
+  'logistics.hub_baas_margin_pct',
+  'logistics.hub_taas_share_pct',
+]);
+
+// Base64-encoded Songa_Partner_Viability_Model.xlsx (embedded at build time)
+const EXCEL_MODEL_B64 = 'UEsDBBQABgAIAAAAIQDFxOklggEAALgHAAATAAgCW0NvbnRlbnRfVHlwZXNdLnhtbCCiBAIooAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADMlc9OAjEQxu8mvsOmV8MWUIkxLBxQj0oiPkBtZ9mGbtu0BeHtnS1/YswKIWziXrbZdub7fp2kM8PxulTJCpyXRmekl3ZJApobIfU8Ix+zl84DSXxgWjBlNGRkA56MR9dXw9nGgk8wW/uMFCHYR0o9L6BkPjUWNJ7kxpUs4K+bU8v4gs2B9rvdAeVGB9ChEyoNMho+Qc6WKiTPa9zekjhQniSTbWDllRFmrZKcBSSlKy1+uXR2DilmxhhfSOtvEIPQWofq5G+DXd4blsZJAcmUufDKSsSga0W/jFt8GrNIj4vUUJo8lxyE4csSK5B664AJXwCEUqVxTUsm9Z77iH8M9jQuvYZBqvtF4TM5+i3huG0Jx11LOO5bwjH4J46AfQlo/F7+VKLMiYfhw0aBb7o9RNFTzgVzIN6Dww7eOMBP7RMcnCk+KbCVNVyEg+4xf+yvU2esx0nj4HyA/SipsjsWhcAFCYdhUteUD444pS6+MVRzUICo8aZx7o6+AQAA//8DAFBLAwQUAAYACAAAACEAtVUwI/QAAABMAgAACwAIAl9yZWxzLy5yZWxzIKIEAiigAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKySTU/DMAyG70j8h8j31d2QEEJLd0FIuyFUfoBJ3A+1jaMkG92/JxwQVBqDA0d/vX78ytvdPI3qyCH24jSsixIUOyO2d62Gl/pxdQcqJnKWRnGs4cQRdtX11faZR0p5KHa9jyqruKihS8nfI0bT8USxEM8uVxoJE6UchhY9mYFaxk1Z3mL4rgHVQlPtrYawtzeg6pPPm3/XlqbpDT+IOUzs0pkVyHNiZ9mufMhsIfX5GlVTaDlpsGKecjoieV9kbMDzRJu/E/18LU6cyFIiNBL4Ms9HxyWg9X9atDTxy515xDcJw6vI8MmCix+o3gEAAP//AwBQSwMEFAAGAAgAAAAhANfDFa/SAwAAEgoAAA8AAAB4bC93b3JrYm9vay54bWykVl1vozgUfV9p/wOLRponCiaEJqjJCELQVGpmqyTTzjxVDjjFKmDWNk2q0fz3uSaBkqS7ynaixMYf9/jce49vuPq0zTPtmXBBWTHS0YWla6SIWUKLx5H+dRkZA10TEhcJzlhBRvoLEfqn8Z9/XG0Yf1ox9qQBQCFGeipl6ZmmiFOSY3HBSlLAyprxHEsY8kdTlJzgRKSEyDwzbctyzRzTQt8hePwcDLZe05iELK5yUsgdCCcZlkBfpLQUDVoenwOXY/5UlUbM8hIgVjSj8qUG1bU89q4fC8bxKgO3t6ivbTl8XfghCxq7OQmWTo7KacyZYGt5AdDmjvSJ/8gyEToIwfY0BuchOSYnz1TlsGXF3Xeyclss9xUMWb+NhkBatVY8CN470fotN1sfX61pRu520tVwWX7BucpUpmsZFnKaUEmSkX4JQ7YhBxO8KoOKZrCKELIGujlu5XzLYQC59zNJeIElmbBCgtT21H9XVjX2JGUgYm1O/qkoJ3B3QELgDrQ49vBK3GKZahXPRrr5VYB/pkzpClcyx1lGZELiFFfFixmyTZExuFFmR4r4VPf/Q4w4VrEwwf8dx93zcSyAKvcawd1KrsHzdXgDQV/gZ0gBJDrZ39BrFePeQxFzDz38mNqTaDoMQgNFfcdweo5vBGGEjF4wmNqDwPUtN/wJznDXixk4nO6zq6BHugOpPFma4W2zgiyvoskrjR/W/mOo/qhp1n4qh1Udu6NkI151oIba9p4WCdvUHr00z64L/m3qhXuayHSk9yzbaec+E/qYAlt06VgwiWNJn8kSr4Clom8rjiP9gFu44xbBx1DNATezQ66unUCy7rWi1nv0DYS0JhyqNoFSraprHfS6bEvIRkqThEBd4J46mF8nSLnchfCFqPKyLqEdBChwrYl9bLLkOCFcm7GEwH1rT+11bHrHNjfskQpJY3FiBpFpj3KOzRakEBSCCKW5c1K/Y9I/NvnMNppkGlyejgVUs/YQt5Z5E86ErGlBElU/ILidURvih8nf4XShjz92o/3xrw/+B8eDBqErs2P2Lxhzf/kWRqAwgjMxFt9nb9CYKIjJKUSXFHgW4yy+5ZrqaokMkWUPVSTIVt4IWfdQdyjIM+gPAqs3tA0nQpHhoKFlBIHrGP0w6vUvUTiZ9iN1U9V/v7dViOt3lvSBWVsTLCuohaoM1mNPtdF+tp1c7yb2eTkobN48VK7srf9r4wLebTJy5ubo7syNky+z5ezMvTfT5cN9dO5mfxaE/vn7/fnc/76cfmuOMN8MqAk5h+reZN5sXufGvwAAAP//AwBQSwMEFAAGAAgAAAAhAGcMW6UpAQAAAQYAABoACAF4bC9fcmVscy93b3JrYm9vay54bWwucmVscyCiBAEooAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALyUy26DMBBF95X6D5b3xUAS+lBMFq0qZdvSDxiZAaOAjWz3wd/XompIpMjZIDaWZkaeezy273b307XkC41ttOI0iWJKUAldNqrm9KN4vXugxDpQJbRaIacDWrrLb2+2b9iC85usbHpLfBdlOZXO9U+MWSGxAxvpHpWvVNp04HxoataDOECNLI3jjJnTHjQ/60n2JadmX3r9Yui98vXeuqoagS9afHao3AUJZt3Q+gOQAkyNjtO/OPKMlF2WX80p/63NwUpENxEcU5aNlVUI5n5OGOfvCCeQMWTjmoQY0oUHkoZgkoVhgpPJFobJQpPZLAyzCV6Td5X5PrGAVjxLaNT0eI+pEMV64ZGsQzCPs9qaBIPluzPetU/d7TT9D8POjDv/BQAA//8DAFBLAwQUAAYACAAAACEA7gsgi+UDAAADDQAAGAAAAHhsL3dvcmtzaGVldHMvc2hlZXQxLnhtbJyXUY+bOBDH30+674B4X8CQ3Q1RSNWE27tKrbSq2t6zA05iLWBkO5tdnfrdO7YJYCe3YlttQ2L/Z/yb8cSeLD+81JX3TLigrMl8FES+R5qClbTZZ/73bw83c98TEjclrlhDMv+VCP/D6s8/lifGn8SBEOmBh0Zk/kHKdhGGojiQGouAtaSBmR3jNZbwke9D0XKCS21UV2EcRXdhjWnjGw8LPsUH2+1oQXJWHGvSSOOEkwpL4BcH2oqzt7qY4q7G/OnY3hSsbsHFllZUvmqnvlcXi0/7hnG8rSDuFzTDhffC4S+G/8l5GT1+sVJNC84E28kAPIeG+TL8NExDXPSeLuOf5AbNQk6eqdrAwVX8e0jotvcVD86S33R21ztT6eKLIy0z/7+o+3cDT6ReouHlPPfTXy1LCjusovI42WX+R7TIEfLD1VIX0A9KTmL03hMHdvqb0/IzbQhUI9SxqtAtY09K+glWjpRxeGH9oCv0kXtbLMiGVf/SUh7gqwAeSrLDx0oOg/NgnsRRguLbfvIrO/1D6P4gwQRGdT0syteciAIKFFYNYrVuwSrAhVevpuqLBvWFX/TzNKxXHIVk9RmgMzMGsB3aAJ6dQQxv3zCAlGsDeJ5XeNtg1hnAszOYXTUITSg6jzmWeLXk7ORB8UJMosXqKEALcHI1E5ACJf2otJl/CzJIkYDdfl7N75bhM2xQ0WnWRjNLdR6U1eZiJB+PhMDRwwD6ZBilBRjI1ABz78AYzRjmYiQfj1gw4HkyjNLqXA4sc4fliiS1JZtLSRrZkvyKBPUSCx92aTK+0mY+ZKLHdzNpFIne82FBXRYbMzeuijR2sI0Evmn9AmlyHRs0k7GV1sZOZ07WjcRwR4FLbmYt8luH3Egs8qHkrYTfvYNcaR1yN+NGciaPHK6NmbbQnYrLjcRCHyrOQr9/B7rS2ugocqp0bTSGPQlm5wvCPOO/bpzy2Bj9OBgUOXuVG804GhQNfqxwVPcz9UxTWjecoTR1ga+N5rwVsVtFZtqmd+owNxqbfthSiz59B73SuvTuiWw0/0tvpt+mNxqbfqhXi17dwNMvFCV2+d2DU3vM/O7sSZxa23TTdgDOyZp3IisCNHiyI3jXlWjusvHRiZBTIGvogFSYXQQzt366aSsC5J6gnciOwD1DTZ9k7nd91T9yJkmh2myvxUJAcwUt1TqJHwBI/QxQdxb0OTXhe7IhVSW8gh1VAxTDSd+Pjno5S92Nxwu4RFWXNrhZLVu8J18w39NGeBXZ6Z7qHui56bqiQH2QrNW35pZJaKH02wP82CDQNkQBzO8Y4Hcf1AL9z5fVLwAAAP//AwBQSwMEFAAGAAgAAAAhAO+9X24yCQAAVikAABgAAAB4bC93b3Jrc2hlZXRzL3NoZWV0Mi54bWycWttu2zgQfV9g/0HQUwsktnWzE8N2kdhJG7Rpi1y63X1ZKLYcC7Utr6TcsNh/3yE5ksihqFgJWjshD8nDy5wZSjP68LxZW49RmsXJdmw7nZ5tRdt5soi392P79ub88Mi2sjzcLsJ1so3G9kuU2R8mv/82ekrSX9kqinILethmY3uV57tht5vNV9EmzDrJLtpCzTJJN2EOf6b33WyXRuGCN9qsu26v1+9uwnhrix6G6T59JMtlPI9myfxhE21z0UkarcMc+GereJcVvW3m+3S3CdNfD7vDebLZQRd38TrOX3intrWZDy/ut0ka3q1h3s+OH86t5xT+ufDfK4bh5dpIm3ieJlmyzDvQc1dw1qd/3D3uhvOyJ33+e3Xj+N00eozZBlZduW+j5ARlX27VmffGzvplZ2y50uFDvBjb//bw5xC+HfbRO+w57EP6+c+ejBYx7DCblZVGy7F94gxnfc/uTkb8AP2Io6dM+t3KVsnTxzRefIm3EZxGOMd5svsSLfNptF5Dcx9K2Jm9S5JfrPEFcOnBMFm0jubs9FghfD1GAn4KQ1nZP3xk9jsM2y3HlX8vOJzzc/49te7CLJom6z/iRb4Cg4JRF9EyfFjnVeFR58hze57jBmXlVfL0KYrvVzk0gVJ+qoaLl1mUzeGYA9OOyzjMkzUMCJ/WJmbmCqc0fObfT2I8z7et+UOWJ5uCADYTDWBTeQP4xgZOv7EBrAJvAN/YwIUZNYwA4/MG8F1Qqh2hK6bC13QW5uFklCZPFpgAzCnbhUxQnCF0wlbEBQ0SQ5ZrZFgiWBvWxwnrZGz70A6aZ7DLj5PeqPsIGzdHyClCjvn6sEZTrWQml3SBX0kS1k8mWbtdBReGHdsBrGDJxSFcBMSXuGglM7lE4QKLtDcXhgUuzDiKdXEJF4Q41bpoJTMs4UdS4QJHd28uDDu24XCUVDxCRUf4KmKqI4ISoRCDYbRTBWWNG8fajO2BRLBPCAqEfMqcHsFMBQaIltM8qqcIA1GK3vErFFkbleIxoSgQx2ACy8nF+dnV1berdxdfZ2c/353//Pvq5Obs+uDy5Gb66d1p/wBKpt9mUNJ7//7AeT/qLrnhdFxyXqeiU3lOTmVeyrqz6IFa82vrztqok3KowQgIE1e2qnlaP73rPy9Ns7M/X6/sYobT8xNyrkT/ygQrO1EmCDu094lnWDIxeuQFxHG4ZLn0LIlahVZlEQottjStF543IgQre+LKeooYxxWi2iHyMcV6hWM1DZVjGxWFATXpcgZU0xEkiVfRriqaFUW6fDnM6UvHtVEeOLhZwGogVMFqIAYJc4jQc8/4mi3xRmRLK/3BLRVyDkyYuUNYTlzlFDtR9rTSGXVP23gAFukQg3A1Ny0waBEetQjsQqYmqZVKjfiA5s3Vxd+lnpKFTixM8fm6kbM4xVqFWWXtKrMa6Xdf3Vld+11yuE4dgal2lsgc1iscTaePKHnz6ukSTrXs1EENF1LX186cLsFutcRqMEa0rjkaY2AaAlGLYDEuA0k6ohfNiiJdR1wSxDYzElFmUyDE+1OlhupIDcSwk26r4FUoqhwEuTTE4B3yewvTD6fjH6s/Z4fUSWAL+dx5hgDCJZK8l+rxRqrqeVrMzTourVeKX7goTrELhaIhBHDbROAcTKjRIAAxoCBckIkLnmK1Qs0QBjAV2f+igqGqfDvwqP/nPRLTwHaSiy1QNaZBtK7ZNIR+NZqGDtFMQ4eYTKONyLFbKfFe1D2dIga9Fw2jsVbZSJPGtYkzXT3Q9DSJw0hzwM+Yr1HTQ03P4PK9t4SavJFqBj51/YgBR8HMwKcOFqvl1ZOmoXgIr+6hwmsOljciFGkIgBiIQsRNqUdMeYoAhaQhCvDa6DIHE3LU+yMGnDyXEeL7sVZhZjALr01YzMGEGb03IwaZ0bOHtQozg1mwx1176xsHE2bULBDjsAvz4yTQQmGsV7iZ7KJNKOzpoXCg2YMSCmsRE3YhUwuqpVXtoY0Ie3jbl91CoBkCgqSIqWgnuYWiSHcLXhvl5eDmm1cNhLqFGojp/BPx3SsGYc9uiHsIqKNHDN4gnA719FivbKnB07PH260v/LyRahEBdfiIQRdGGWKtwtBw3fffIsK8EWFIb/2IMT6SwHqFo+EZnN9G6TiYXCUCGhwXIPl5qog8pdvFrEDphuG3erwrbvJN8RLvr/kqUQMxGIbfRuI4mDxPpRKHGEO8hLUBfxsjP473SZi7l4HyRoQPvSQgBiNx3UCxXj5afcMtwW+juRxMuFHxQEwZe1B9w3qFm0k82qgve6tCn4troqFc7jVm+t2+bxKNNnEvvEDRmGlioTxh9TQHj30oq2YQC/YaZf+3HeKRgnyR7lOt4B3ClVQ8EtGupFgtUxsYbs2gLS2oiQcQMrUBNQTeYUmNegGsVZgZzIC9B9t/0VAp5dBjoL0l0uR0ygdRLqmzoqjmnVUbhQ1eV9gaiPbaSu/FoLABUdi9lI03UtVjQC8HiDEoLdYqG2pi+BbtDfTHqwN6SUAMPrw80iwV6xWOhmtC0EZ7OZisHr0mIAZXTwvFsVqhZrglBG95Q8YbqRSPqCtFjFFMdA0+MtwWgjYazMGEGr0sIKYM2OilGet1P99vI2scTMKzIyoeBUgKz/SiWVGki0e/zaWdg5vvLTUQKh41EINp8hyWtm9feSOygVQ8EFNuoPbOGyVZfulNOYp0GpH6wbNAvqdJjpk4uzDLIFcHMnROPfccHAbLM2OpIZACs4nSe56kk1nz5IHlxsArR6m4yhZS4VjuDYYzuIbKHWFNnyUY1bYJvCHzHzVtHHfIXifW1PhDyJKoKXd7Q/bioK6mDzX92r5gfLgh1LWBJjwarlYFEqcgneZHuI7hmyXFlcvEcqqUKit/2UFq2zrOcrbGydNZmibpZZRl4T2Ug7FFrOAmzlkG3MX2kXUKmThpCimCL1g7tq95BpUF6YFWshxanyGBwPr68euBdfMX/Hb78eeB9fPbOXycwMft9ezAOru9ggGL7CpDbpjbkBvGsgof1qEzKVIWIFehKBp11VlC0g9ZkcloBxO8DNP7GJZnDTliLMFqAHKdihQs8Qfkj/FFuEtyyKfiv64gfzGCXKFeB8DLBA4s/sHyw8qMyMn/AAAA//8DAFBLAwQUAAYACAAAACEA3l8QEsYIAABSJQAAGAAAAHhsL3dvcmtzaGVldHMvc2hlZXQzLnhtbJxaW4/byg1+L9D/4ArnYZONLc1F0siwfRBpT9oAPW0QnLbPWlveFWJbhuTNJij638sZjawZSrKtXSR7GZMcckh+JEda/Ppjv5t8z8oqLw5Lh8w8Z5Id1sUmPzwtnX/98WkqnEl1Sg+bdFccsqXzM6ucX1d//tPitSi/Vc9ZdpqAhEO1dJ5Pp+Pcdav1c7ZPq1lxzA7wybYo9+kJ/iyf3OpYZulGMe13LvW8wN2n+cGpJczLW2QU222+zh6K9cs+O5xqIWW2S0+gf/WcH6tG2n59i7h9Wn57OU7Xxf4IIh7zXX76qYQ6k/16/vnpUJTp4w7s/kF4up78KOEfhf+s2Uatd3ba5+uyqIrtaQaS3VrnrvmRG7np+iypa/9NYgh3y+x7Lh3YiqJvU4n4Z1m0FcbeKCw4C5PHVc5f8s3S+a+nv6bwk8hv3tSDWFC/NZ/9z1ktNjl4WFo1KbPt0vlI5g++57irhQqgf+fZa2X8Pqmei9e/lvnm7/khg2iEOJYR+lgU3yTpZ9hZMbsd7k8qQr+Uk8e0ypJi9598c3qGVAAJm2ybvuxO7aKYCUY9Rqh//vBr8fq3LH96PgELrKp4mG9+PmTVGgIUdp1RqfS62IG68H2yz2WiQXylP9TP13o/Bom2fqlOxb5RQLPVDOAOxQAnqRkoKHiBgWsG+NnsEPQxuLVm6lge0lO6WpTF6wRiEVSsjqnMbDIHIdJAetbxbPKAxWCqlPFRClk6PhwMsFfg1e8rQvjC/b5auGtNFNdEPFIGS7aks/Jgrrig4VlNOBhTzd7zb7SRtKANnKGhjY+0qYlMbTorD+aKpQ0c1M3aSFrQBtxoaBMgbTQRac9Gr6iosvaGQ755b0m7dCAgjK1DtHUfjbBpkj6a6ExjqQeb3ayepF06oake9ZB6NQ1kwWqxXX2sqpf9URWBv/wS/0L4e7QCxm1l9HEsJ6nlWBFKSb8JoFAnJYD9YsxJHmwKRabUNJQoU778/scdNsdzCf2AF/0P0zh456JlOH1lqDcLPI8xLjxBiBCCE+y7elfbcNZvuGwCDCy4aLCkxQbjjK9pBnwXYN+RcMibNEKSk1qybVSb4VZARm/wpuTBxuGUrWnGelOAN8UFb9Io8gUPhO8JLjgN2xBVSJvUu9qGtxltGS5L2+g4VkzYdBRSsSbStscdT1I6HK6UU+aFQdR8xwZq2baFA1hD+orXtUxVTFDkANxbVGQYdhoqppI1Du/j6B7s1llHZoRTCt4Rvg+FjkQo1ZOGHVDc2GQAbwhUqpvzThHjesIw1DRURkFplroVhYwpZ4r4Wk3pJcLA1Es05OkxVU82aCh9/Y5/a5p+bGIAJQpdA8SWaNFWdLIBNCVjSqEiRnnHOh2ULoZ+HZTQxqOqQBmGUAoylCkEH0Git7RtGQBRYtZECFfVJl7NtJ6iyDCMKsmQjrVNyB7mvb8jU7xI3uEl2pRDPvNFZHwFrW9q/NTb2UYPAahZD282uqcwsg6A6srYODLs2Eg7K2BJ7cirJvYURzaUV2Z1lOObnH/xXHPu8nXJs5CTdzJLUwU6SAUOSRnWypIw4jPDV6LTuhAtykJRPoCiUI1aFL1miiLGKMoxijZUBoo2S10UlQXljOJX969Hi8uduZKIoRajaC/RgLepWWiuqiiJESJxlE6xkjiUvbTTnsswVK5n4QwNZIkWZWUmbxHQngbNinVrZtJ6pLLGDd4ZC2siDUdgHwDQPQIgTt41Y0bHCD22mWWft5BnG2HWtKve6NY0wvEoJ+8rwGWG8ljzcwMjehxQc9sOaMPN1t2sbVd112XLxo02RhUyx1RTadzoBo9EGhU8lHaOXfNaQGEUPFt3BOuX7xI0mFrju4+a1ljemMgh3wQKvdQDFGMwl9YQeAUo+og6QNFHNAAUzBwdrrlXESOg8DGUaiLdb8WkAYKrNUAz+vJmxHIjQ3h/U0uimLCuGNQ0UaMrhfwdiDtNaaWMP4BZbEx9UMSQyRZY+RisGipRl1rm3ccMQrNuEzwSWdUVjygNs7qPs092TJlgPWXCx02eJgJfylucaUwaLadXJynNah/xQMPG3lIWFBMOCdywaaLGgLuYBPcx9Zs6MGU9BU3z2JoPJdyYWsA0zFvBgUeVuKFqgoNBcDSdF+grZoE5wuILloa7JzoQ9N+WdzVAy3xp5+EAwyjTVFTHMwWVTbUDQWbMD8OQCsK5CEJUQxItQFZ6Y5s28u0wH1MH5L195xoXTxdxQ2XUgWapWwfYmDqgiK+N3X1EQcezI+oAH1MHFDFKpABDlibqn7sppF0NXuj+WXPdNHbzMXOAIsY6dy7n66cSQzq/j+X1y22gq/ezDAkG0IyPKRiKGBuCUUwTDRpyp9PNgLUrMKEl2vYMYBwfU1YUMbInxKOmJrrgmKZ0X0UOLcoyxLh8tZ/+oDJzsYHkPVNHiLsjTXTJEDxFNw0UCUPizxg8W40YCYMANwmJlm1bNnBlxce09YoYz9AhvrNqqMxHW/pZTBcSObpmunyy9fWS1RqHHbzpEmFAVJsiaA0HZjb+lishxYRjGc9umgjaHdkiff7029ev//x6B40GgXtn1WxMYUR658ZEfHD+4X50miQNyYyHzIuE8IUglHUAX0u2A2BgroPnodYlxk3FXTFh+/B4p4mgKTLti7nAd5iM2/Z58q494gGJINLDgIKxuDr0PBQRLVbYT0/HVDT50BZfgQjctGgibBgLXKgL2JQAepYoFCSAhzthRAmKgkQLs3wlcP9Sv9xQP8VXD/S/lMUpW8vHopNjWlXwRgS8BwG7fwL15bs78ik/jE/7rHzKkmy3qybr4kW+tSB7w/Nq+wKGTa3XqZgnMOeachoONk/g6ULPJzyYJwAAPZ9QAtL695nDc/c+WSCqb52BXtBkyfGwNXC1OKZP2e9p+ZQfqsku26pXNEI417J+icObyT9OxVG9AfFYnOCNDPXrM7y7lMHLCd4MPt8WcLD6D7nB+W2o1f8BAAD//wMAUEsDBBQABgAIAAAAIQAqv4lP5wkAAFwtAAAYAAAAeGwvd29ya3NoZWV0cy9zaGVldDQueG1stFptb9u6Ff4+YP/BM+6HNKltkdSrkeSiEm+3ArtbUdxtnxVHTozaliE5TYth/32HL3o5R5JjpW3ROin98JB8eHjeyOtfv+62ky9ZUW7y/c2UzZ3pJNuv8vvN/uFm+q8/3s/C6aQ8pvv7dJvvs5vpt6yc/nr75z9dP+fF5/Ixy44TkLAvb6aPx+NhuViUq8dsl5bz/JDt4Zt1XuzSI/y3eFiUhyJL73Wn3XbBHcdf7NLNfmokLItzZOTr9WaVyXz1tMv2RyOkyLbpEeZfPm4OZSVttzpH3C4tPj8dZqt8dwARd5vt5vhNC51Odqvlh4d9XqR3W1j3V+amq8nXAv5y+CeqYXR7Z6TdZlXkZb4+zkHywsy5u/xoES3SVS2pu/6zxDB3UWRfNmoDG1H8dVNiXi2LN8LEK4X5tTBFV7F82tzfTP/r2D8z+MnUhzNzhPpo/fnf9Pb6fgM7rFY1KbL1zfQdW0o3mi5ur7UC/XuTPZet3yflY/7812Jz//fNPgNtBD1WGnqX558V9AOM7KjOi07v91pDPxaTu7TMknz7n8398RGOAki4z9bp0/bYNIbzUHBHMO7VX37Kn/+WbR4ej9AFWrU+LO+/yaxcgYLCqHOuxl3lW5gufE52G3XQQL/Sr/rnsxnPhfFWT+Ux31UTsN1MB9gO3QGYtB346Q6u7QA/bQfh942wMDPTtMj0mN5eF/nzBHQRplgeUnWy2RKEqAVyMAZmjvWSB1YMS1Uy3ikhN1MPiIHuJezql1sWiuvFF9iJlQXFBmQ2V3dLOi2y3bKAGdbTBGLa0+zlv5qNwsJsgMPWbFwyGwNqz6bTItstaDZA1NmzUdibqUDcsIDMxoBg9a0ZexiT9GF8jJF2MFCBlqBmMLQImNHZi1BYoBTJZWTw2IDalHZaZLsFzQZEnz0bhb2ZBu1FcocwajAiAGVc374ry6fdQTuPv/wS/8LcS9ICFK2V1rpUTvKD5EgjB5+QsJ4zogIWdjYVCkuoCCNChcFYKj7+/scFpcNZMP6WNnpvZ7H/ZkGaQbYmypn7jiOEGzohY2EYuqxZjDncrx41+Y5RpRkV0Rw1qoFoViFPy/KdNCkKS2iOGKHZYAY0zqcax4IhHeQRsVXJT5MsjWREF2/sDqIrGkGXwlK6OKHLYMZqZQhaGZ7QSh5FXuj6oeeEbujygGxS8upRk+8YVZpRsVY27hHRrAKSs9VSgynR1NNZkGU67mgi58OHnLtcOIEfVZ+UTiw7+ZGypZWNlbOxbZg1EsacPMzMRBnIf0TE28YW1H+cPY8eXq+z9MqlMJ9axp8nWlrRWNMaP405GxNTMRMLYc5oFGNBI8+0F8CZZuzEoWYBYxHjbuizKGIOo/bx9eMm3zOutONitgecOoNw9PxzrcAQiAPpTRwXUb+uRUJoGeoYJw6u4ugqZg78A1urvTSbCybANbvwAb/xiMTkCRaRBFdJdJWAiORsEdKK4BB61nOFpL8/tFG50/ks9ESd3KFuV4u8maK8oht3IhQ+BmMiT9YNPblDPZsF9ZsON6Smw406xgTYM/sHRJLANvmp0qWV3lZpyIQHNnNMoMq6kSp3Oq4KBY0k9ATmaOTqOVcE5LE3lju/Q9xPFC7t8jBvA5EUGxN5ajB28dyhmZcFVS6eBdSjc0F1jAP3Rse8DlEo3ky+T5q0c8PMDKSkbEyQqcGUGeJrYwsaOIv+ZayyWMND2HPWULhI9dG/hMM43FvasfHKBwIYVeY5v8ChwGTljCbAWiJ4B5MBAxEdu1NFKEHbXJvkDXdORnWWtjNaN2vMNq7r9NWfwMieLvCYAA65R648Fqo3cYOy7rEyqVTZMapnpT5YP6MgDmgIqbfY3tj5sQF7yceEABpMSi6cRj6xRaEylokdWk0SoTD9YypZapU0rXNplc+C+g8c7xReRFVQEMGcFrx+nChpRaFIzW28D+ZkTIyiSsQdTmguYUHVUQQWLljHcUWV43LDedChwgxjJSTjJUg7B3woBxwUHxMSaTA1RtRBWdDZ2RSYcXvmSBH0RwmSVhDmY8At8TGBjgZTPqhbsqCWRsS8ciWiu/soclG7nwyjpZWNVzbkdsaEIupegGYlvFN4tagqK+HeZbM0N+w55TbaMFlMAvhmcT14Wc0C5Rt8wL2IMW5Vg2mV26P5hkW1TW63SaImZF7EmFKFBhNl4tTRWVCtTOwq5tUB6mMc4xPOrpIazxjv7pG0PZBK8QEvJ8aUFTSYFLA8ajwsyK4PagWVR569mN+SrpDvWsPyYldpu3r6OrF9FSXGuHENphtI0x4LqhZ4EbMQtjCoHMLMa9VkTXxGeyTQIznVQ9oeeAsH7L8YExVoMKlVcGWeUDBmUZVVEPwqFvVeeNzHhQpa4MG9E+idnN9bVjN0u1tJXL2+3gVjezL6VFd56kavfVvHOa2FVajIFGcEHEq8aAG3zO3ijCCUJZUEriUkIAEvnEFhls1Z6Hsh8+DDJ/UhaQWoK+emMqNOut0ZbJbG+DjQ1M59IOe0PmVRyFKaju3gFKHwlMY4J9CsTk4kaE5kQU1OdCL3w1hIDE5kehaLDpcYckljclzRvUnhomP/UZYaK4+sg6eevM7Kq+PIYai0ULymAZuvVOz8C/Ge7FVQk6gl1tnrUPKGUSQ/9wXk5/Wu9SRvtjde4YBJdMd4NQ2mgUTQWWL3CYLt2D4eqAk/Qhjjh1yTFbbr95xanNiC6kDCm8VNmYjNO14I4yF0m0FsWh2TLl5aPCZ8IOZ2iQ+qHqacNM26E9SCkWkWNPi2KPCI6m3Ah/e/ffr0z08Xs1i4C6Dg7fQfi3fTOhnz50EI1XM3ClgEVj6klzn9wi5miXCBDbg0pDVLt3NT5Is3ZFAxZ9x3oD4awiaBdSfpoLSDYiIHQnx3TDKnwbTq4FIzalFtw95tkqgJa+4YX+N2C8fMpxm2BQ2U+QBtskn6ouZkRXigl7RjIfLdAWPvjnFhGkyC4aDD/anHAC4kW6Ka9+zFCMMOOMTaJYQgdR7+QqxhRbVJgVu7/lAD9GaEt+h5SxBQD6gl1t6C1mk1KbT6WTmGGXOcaM7cMAwiSH3gpJNILnlJOLA0JJwHURA589CDtMoJ4D0hsR7qqaMOpNr3fAF1suYxo3m1px/wfSzyY7ZSz5kmh7Qs4QUkvHuE8PI9CFNvddWrPniMuMuKhyzJtttyssqf1CtFFYzWrfbBpcvhxaV+vNj5xodvfCSpeaSJR7DtXCxVsbE9tv3GW8LTr552ESwl6F/fNw58ox9z0nkxEAb3eT19YCl6JYtm6bfXh/Qh+z0tHjb7crLN1vqxZgCKWpjnnA5U24D+/KDfQt7lR3ibqX99hFfMGbxudObw/ToHyu1/1PvS+l307f8BAAD//wMAUEsDBBQABgAIAAAAIQDRYPJItBIAAHaUAQAYAAAAeGwvd29ya3NoZWV0cy9zaGVldDUueG1s7J1tb9s4EsffH3DfwSf0RTe7sUXq2YhzqC3JNnB7WOzu3b12HSUxaltZW0lbHO6730h+EoeyIissVq6n2E3TIfVA+WeK8+eQc/P3L4t56yVarWfxsqextq61ouU0vpstH3rav34Pr12ttU4my7vJPF5GPe1rtNb+fvvXv9x8jlef1o9RlLTgDMt1T3tMkqdup7OePkaLybodP0VLKLmPV4tJAv9cPXTWT6tocpcdtJh3uK7bncVkttQ2Z+iuqpwjvr+fTSM/nj4vomWyOckqmk8SuP/14+xpvTvbYlrldIvJ6tPz0/U0XjzBKT7O5rPka3ZSrbWYdscPy3g1+TiHdn9h5mTa+rKC/zj8b+wuk9mlKy1m01W8ju+TNpy5s7lnuflex+tMpvszye2vdBpmdlbRyyz9AA+n4vVuiVn7c/HDyYyaJ7P3J0sf16r7PLvraf/Vt3+u4W+W/tCvdTP9kfvzP+325m4Gn3DaqtYquu9pH1h3bDha5/YmA+jfs+jzOvd7a/0Yfx6uZnf/mC0joBE4TiYff4vm0TSJ4LJMa6XEfozjT+mhYzDpcJF1ViG9yGSazF6iQTSf97R/GlB9/Ud23fR3uGhnf9X877s7CDPKf1m1Pk7W0SCe/2d2lzzCReEu7qL7yfM8ORjdtmtw3WDc2hf+Gn8eRbOHxwQOAWvGVPfuqx+tpwA53Gmbp/cwjedwQfjZWszSLyswOvmyadrmehy+rNPndRIvdjewPWxzAHyk2QEePIvtDZpFB3Q2F8pa7E+Sye3NKv7cAjzTp/I0Sb/srAsnSe/3cMl9C440AO48PceH9CQ9zYJ2wuFr+AxebrnJbzov8GCn20r9TSXTy+4/PWwgWXzJEkiWULIMJctIsozzlg60ff8A4AnmH0DhB7VrZ1oX2gno59ppoHZuKuXbKVl8yRJIllCyDCXLSLKM8xahnYBF5XamdaGdjtBOE7VzUynfTsniS5ZAsoSSZShZRpJlnLcI7QQIK7czrQvthK9Y7vO0UDs3lfLtlCy+ZAkkSyhZhpJlJFnGeYvQTvuEdqZ1e5oJbOTaaaN2bisZ2dfXZGLpQCxFzPtiKXqCgVjqiGcOxVJPLB0KpRa6q5FYergr4UkBxpWJSOvCk9o8BBjOoGe0LTbhGd3fvjfZ1Xt2/WG9fl48ZYOVv73rvzPYD9jEPakSlyzGD1dwvetffv79PToj0zuM/4SN1k/4FMy8QpWcHzrI4lW/gCtfwMYXYE6VS+Jbl+8Tn4Vz+cbxYzEsXIfDM0TX4uaPkgXXMTxsgQ8WHWUCCffpe+3as7y2bXLOHeZaFuPMRd8UxIhBjFwcI5bD8owwjvo8HzFiESMXxwhzDYERhEiAEHEIkUtDhOtm27Acx+EuM03XcfHICSHiESKXhojl8TwirouctKGIiEUD1osbsHquLiCiI0RGCBEar14cIsywXeFNc5AGBEc6nTfIaYWlUllad+9IG5IjvS3+Ro40XI8c6XWqRjTYkWaGywVPGkk/A8SI4o6JGEmn1xrOiKvrgpPEkGjpI0YUO9LEyBkwAgqcwAgeAweIEcWeNDHSfEYM2xDGNybSbEOEiGJPmhBpPiKeaQlukoOmuIYiIqo9aUKk+YgwizuiICfO/IwQIjRgvThPmjPdE980e0QETxoibSp70mndvScNUVVoSnpb/I086TSKi6akm+5Ju7qVHwIb6N01QIwo7piIkTPwkpjOhbgFFEnjI0QUO9KEyDk40pY4I+0hsSVAjCh2pImR5jNicWG+0WHoTRMiRBQ70oTIGXhJ3BMmk3DUwlBERLUjTYg0HxGuOyiyBTnSCBEar16eI+1aQtiCfZgcFBzpdDlOZU86q7x3pS3Jld6VfyNfGi5IvnTTZxwhsFuYTjLQYoYBhkRx50SQnIMzzS1xzhGvh8GQKHanCZJzcKddgRGOfaUAQ6LYnyZImg+J7bL8dIHtoBioEDOi2KEmRs7AobYtARLJoUaMqPaoiZEz8KhtLjDioACXEWaERq0X51Iblie+bA6ejehSoy0hSsO82XZfhc2CaVt2qbfl38ilhguSS914lzp9geWWTKMFKIMdQztGFPdNxMg5eNSwvlGI4pU8atSRKPaoCZIzgMTgwgQ1R4wEuCNR7FATI81nxDXFaQMDvWxCzIhih5oYOYfpR3FhvYd2KhsiRlQ71MRI8xkxGFoSi1dNY0Zo0HpxDrVpGGI01IER0aE+ZYtBtt3Ab+NQO7JDvS3/Rg41XJAc6qY71EYaP5N3qKU5agSJ4s6JIDkHj9phtuBRizFW/q6j2XUkih1qYuQcHGoxjIHjXT8DDIlij5ogaT4kniesaIP9yND+rZgRxR41MXIGHjVsU5ePY5A9anFAotqjJkbOwKN2mLDC3pE8asQIDVovzqO2dEfYqMM+NkUNO/BXj/pOK++jvmFHIZyXYFv+jTxquCB51I33qE1PmH408V5kDEGiuHMiSM7Bo073iMnJLngJNWZEsUdNjJyDR+2JU9QWmlsKMCSKPWqC5AwCehnILrmNvS28iBozotijJkbOwKN2mBDIIHvU4oBEtUdNjDSfEZPb4u7vqB8ZoX7EokHr5XnUkDpCWGF0zKM+JW1amtBQzg+HdOH+tpaQ8E/OnCbXCmRTKJuGsmkkm8aCSZyVPyWBGtskGkOZ4tAii/62ltDibYayQ9ZDX64VyKZQNg1l00g2jQWT2OJTEqGxbVoAMWcccov7u1pWljROb+OscVI5mqn2cQVpuLy9jd0FODpBiE+At+3E5ZLqiC5w7Ptxyt73TNj8HucT3JVu9KYq2cnesx/h0Uq5zSzrypJSzUm51eTsZtlxtKnfsU39qj4Zy5ES5MGTRZ+nJaXMK8rJh1Pbme4VNlk6TmRnMSm7X2ECvF3iOgbRSpZtmMw14YfBcGjsoC6YFpGZTwBZ9AGryYD43ZIJcf0MchftyURvAb8mmZzAJDDzT+DkLpMZbRc6ymNdZlAXTOoyhZy51GWeTCYsYTCNXJcprXMRNiOvPMqUM+jSKFNAVUrlXJB1uUo24+/1Xe5ZbT0/yDTQJrLDml2mSe9yepe/5V3u2O3U5zmMMdEgc1QTTHqV06tceAKnvsohdFJwy/kBTFG+OyVpBBOyRkhCpbDB6tskKLemBOVSVNTRqKjv19GHHWiETliMxRvssD1VGy3shInMp2Q3i0nD1nfl4qiOhgfIn/JrklkoQRGYBObi8AhKwUz37Mr3mNifCuqCSV0mjVvfNG59zaEKa5JZKEFRl0ldZtUu08aDTGl/l3ruT6EERWASmFXBNF4Bc1Szx6RXOb3K3/Qqx2NM6xDLJ0hQ/JRsK1nl/bo7hpfd7YpVhEExvaYIBQdSINTFBUK9Mqs/qItmYT9MbOZnbUiHKtehXps+9WuyWahDEZqEpjBuKFWiXvP3g7poUreJZuAoHErhHOq0teppYU02C7Uo6jap26zebRquGEKam97P0BzWRLNQjSI0Cc3qaJa4/Rmao5po0gudXuh4HdRpi5UMGxaE2JbLLPhhu7Z9ZGtlfkquoqzyQZBCswL9XbESQYrXFaQ4CVKXFxb1SvDJoC6axR0xsZmbsCFBqlyQctEKKDx89WuyWSxIEZqEZn4EXypIvTbPH9RFk7pNGr++bfx6/ZrXH9Zks1iQom6Tus3K3SakhSiNKB3WRLNYkCI0Cc2qaHK3Db5+ode/1aOEJKCV1y3R+5ze5297n8O25MfIFAOkTkn1xYVUXwzvE7UrVqJH1d0oilmkR12cHvVaEMqgLprFHTGxSUOE6k6/3fby+57IepSQRqTyGKFYjyI0Cc3KaL7m8wc1u01O3SaNX9+oR8Fu4nZ+hz28jDSsyWaxHkXdJnWbVbtN5sBGZiVO/7AmmcVyFJFJZFYls8Tp38pR9Yaa9Dqn1/nbXueMe+AFHTpN58iWUfyUPHlZ5X14FJfW6wkJRyr7VYXblvO66/XgQFqvd2nr9V5beDLYkatk1yhik0Ko1UX3+zXZLJSjCE1CU110f1AXzcLxK7FJbFZmsyS8f7tcr95gs1CNIjKJzMpkvubzD2t2moVqFJFJZFYmk5lidFTO59+qUfX6THqbkxr1NjWKQ/qmfHTUUTXKhLSRT5MlpI5kXdiC7wszJ9Pu3Vc/Wk+jZdLT9DaHPIIZzR94WvmgRknBUdtiFcFRvO6kABxIatSlqVEl2/Vn5A525KpRo4hNmrCqHtr/yiy/X5PNYjWK0CQ0q6L5mscf1CWzePhKaBKaVdGEFc66zY6vOglrolksRhGZRGbl0Kjj0/zbraPqeUHFYhSRSWRWXql33OXfilH1yKS3OYlRb9w5CsWTHhWj7FPEqLRyT7McrQUy1RpEqpdbbkkRUptapqd1tirWgEsmXzYFsimUTUPZNJJNY8Ekrk2Eu68uv6WVocWQRTjXYiama+vzTS2hxZLJl2sFsimUTUPZNJJNY8EktjjNgVxZcNwmTIaYzlyLpU3CtrWsjAG9baAEdhyV4zRiuBzpmgEuR9lzQ1x+2Kh/OyJA10eZH0f4eG9//+KTOyXXJBdyTUpPrCzZimlfcZwt2fSwxdKv4En/WDHmEPcfXlHmYFyJslEuG7XMlV+9xx+RjgGouklwza34JERuOvdZx+8gMQN9xwe770OhAHwC8SYRnxuRMwd3C9/XNtkNJt6wy4n3VRFvEfFEfK1MRor7eNMSiffQOC9QRbxNxBPxTSDegkWY+T2XMfGhKuIdIp6IbwLxtlFO/FAV8S4RT8Q3gXiHlxM/UkW8R8QT8U0g3mUi8c5BbxX0TuOUxKZZ5X1oKvIM+rvSY+qPQXrnWkCDuT9h743Z+CF97+qP0Vy909TFlQfYMxioIp70zvz0OxHff/cnKfyW4QlrbTDxviriSe8k4sWX4Z9EvO2U9/GBKuJJ7yTiG0G8q4t9fM4z2CxBV0U86Z1EfCOI90yxj8fED1URT3onEd8I4pnuiJ08joZTRTzpnUR8M4jneJuI4vhO45S8uVnlvd6Jot36u9JjeqdJeifpneIT8K7fm83VOyH0h5VFQgxUEU965yW9NRpMvMPKifdVEU96JxHfDPXHE4nHvnCginjSO4n4pvjCIvLIFw5VEU96JxHfEF/YKiV+qIp40juJ+GYQDzH8gusq6Z1l+ZNhZWJVrYb0TiK+GcTbyHU9EC/Gd56Sl9kQ8jLjnUd3pcf0Tov0TtI7Jb3Taq7eadvipudyfGdZmjN4a1QlnvTOS3prNJh41xO3r8Lqj6+qjye9k4hvxjiJMZTZQty3KFBFPOmdRHwziDdMtEehSHyoinjSO4n4ZhBvoYE82jtuqIp40juJ+GYQ76CBvKR3KvJcSe8k4htBPNePjuNFvfOUxN/GNnGYke1pit4a/V3pMb1TWqpN+3fSevb3dnP1TlgTIOx0hdWfgSriSe+8pLdGg4lnOqTny4c0o3GSr4p40juJ+IaoP0Yp8YEq4knvJOIbEgmhlxIfqiKe9E4ivhnEu04p8UNVxJPeScQ3Q/2Bxb1l4/iRKuJJ7yTim0G8yY4RL+qdp6SWN4TU8sgX7u9Kj+mdLsV3UnynFN/pNlfvBPWHla0KGKginvTOS3prNJl4k5cS76sinvROIr4hkRBuKfGBKuJJ7yTim+ILlxIfqiKe9E4ivhnEW3op8UNVxJPeScQ3g3i33HMdqSKe9E4ivhHEG/yo5yrqndYJme2NtPJ+/06miwth+rviY4In00nxJMVTUjwBi8amaGcGynSHRP6BMuZJ87ykN0ejmXcclKVd7Od9ZcyT6knMf2iGg8DL+/lAGfOkexLzDWEeVvmWBQGFypgn5ZOYbwbzBkP9PEpCMVTGPGmfxHxDmLfK+/mRMuZJ/STmm8G8qR8dz4vyp3OK/JlW7mmWp7WSnrbOFrlzS0rbvqllelrn9ibLADkwJJMvmwLZFMqmoWwayaaxYNq0uLN+jKLEnyST25tFtHqIBtF8vm5N4+cltMaD1uytrVV039M+MKs7ZlbaDFzCu2NeZIcDCusbTje9pYIzMbhE4RXgCF54hNkdm4VH2HCEXXgNKGFZSefQcPhs4uXdLJnFy8k8jFeLSZLMlg+t9R9Z4/tOd8TSfQym978+z6NW8vUp6mnTeB6vfptO5pHWelrN4tUs+drTsmr7kvSQl3h7wGK2zDA4WJ6i1TRaJrP0FC+TOeCkoxqLyZfMkp6xtXr42NPCMHRtz+7L5jDou9nTyO5sV9s2+oGT1e4c7vj2prNpS/pLUdNfeyLM7Y54qu1XeCQ8rfb9PxLuddO3Z6VHwr6XR/I0eYh+nqweZst1ax7dQ+ehtx2YGVrNHh73/0jip54Gm4R/jJMkXmS/PkaTu2iV1obK93Gc7P4B3ULnc7z6lHVQt/8HAAD//wMAUEsDBBQABgAIAAAAIQC09WuZdgMAANsLAAAYAAAAeGwvd29ya3NoZWV0cy9zaGVldDYueG1srJbZjpswFIbvK/UdEPcJSxJIUMhoFk1bqZVGVZdrx5hgDWBqO8uo6rv32BASTCIN00YzrMf/+Wz/+Hh5cyhya0e4oKyMbW/s2hYpMUtouYnt798eR3PbEhKVCcpZSWL7hQj7ZvX+3XLP+LPICJEWKJQitjMpq8hxBM5IgcSYVaSENynjBZJwyzeOqDhBiW5U5I7vuoFTIFratULEX6PB0pRi8sDwtiClrEU4yZEEfpHRShzVCvwauQLx5201wqyoQGJNcypftKhtFTj6tCkZR+sc+n3wpghbBw5/PvxPjmn0816mgmLOBEvlGJSdmrnf/YWzcBBulfr9f5WMN3U42VE1gScp/21I3qzV8k9ikzeKBa2YGi4ebWkS27/d5jeCs6cO7sidqcPZ74+9WiYUZlj1yuIkje1bL7rzJrazWmoD/aBkL86uLZGx/QdOk8+0JOBG8LFy6JqxZxX6CTK7ICpITrDyiiV+nWSVqtPKnl8fUzxqGz9xa40EuWf5T5rIDL4XSJOQFG1zeXo4H88nvjvx/Fn78ivbfyR0k0loAk+1aaLk5YEIDC4GtLGvGDDLISEcrYKqrxFMiA76vK/z+TAreCskK44ATbO6AbzVDeDcNAgvNnDqRLrHD0ii1ZKzvQX+g4yiQupr9iJoqXh9WADqlG0PrnQAyJXGrRKJ7QCGBpoLGPTdyp9Nl84OBhY3QXd10HShhx6ytwhgFRNhAVLDEJRIbE+DDsLMQGiCwk5Q0AY551TT/0GlRHpUoUHVBHWp5pepwErmWAWDp0uJ9KgWBlUT1KEK3MtUMOomVbgYOoNKxKQKPIOqCepS+ZepIKhHBb0a5isl0qOaGFRNUJfq5P+Or1R1NT64OfRqGJUS6VGZbm+CulRX3A6z9e/foBLpUZlub4K6VFfcrhbb3mANXhq0So/L9PsxqgMWXjG8d2HZHO54rWKChablj1FdsCue92ANN0dsCgvMwPVcqfTATNfrXBDVBbtieyjkPbDZ8EJzaZkPTePrXD0w0/l1+a+Loa6LT5zJZqtQISFgMwFbiLuJ/wjkaturiiWU7ILwDbkneS4szLaqlntQ8dqnZ3sXXelO4atlhTbkC+IbWgorJ6neBoSwJPF6o+CO1Y1klS7Layah6uvLDDbRBAqtO4b3KQPM5kbtYtpt+eovAAAA//8DAFBLAwQUAAYACAAAACEA6aYluGYGAABTGwAAEwAAAHhsL3RoZW1lL3RoZW1lMS54bWzsWc1uGzcQvhfoOxB7TyzZkmIZkQNLluI2cWLYSoocqV1qlxF3uSApO7oVybFAgaJp0UuB3noo2gZIgF7Sp3Gbok2BvEKH5EpaWlRsJwb6Fx1sLffj/M9whrp67UHK0CERkvKsFVQvVwJEspBHNItbwZ1+79J6gKTCWYQZz0grmBAZXNt8/72reEMlJCUI9mdyA7eCRKl8Y2VFhrCM5WWekwzeDblIsYJHEa9EAh8B3ZStrFYqjZUU0yxAGU6B7O3hkIYE9TXJYHNKvMvgMVNSL4RMHGjSxNlhsNGoqhFyIjtMoEPMWgHwifhRnzxQAWJYKnjRCirmE6xsXl3BG8UmppbsLe3rmU+xr9gQjVYNTxEPZkyrvVrzyvaMvgEwtYjrdrudbnVGzwBwGIKmVpYyzVpvvdqe0iyB7NdF2p1KvVJz8SX6awsyN9vtdr1ZyGKJGpD9WlvAr1cata1VB29AFl9fwNfaW51Ow8EbkMU3FvC9K81GzcUbUMJoNlpAa4f2egX1GWTI2Y4Xvg7w9UoBn6MgGmbRpVkMeaaWxVqK73PRA4AGMqxohtQkJ0McQhR3cDoQFGsGeIPg0hu7FMqFJc0LyVDQXLWCD3MMGTGn9+r596+eP0Wvnj85fvjs+OFPx48eHT/80dJyNu7gLC5vfPntZ39+/TH64+k3Lx9/4cfLMv7XHz755efP/UDIoLlEL7588tuzJy+++vT37x574FsCD8rwPk2JRLfIEdrnKehmDONKTgbifDv6CabODpwAbQ/prkoc4K0JZj5cm7jGuyugePiA18f3HVkPEjFW1MP5RpI6wF3OWZsLrwFuaF4lC/fHWexnLsZl3D7Ghz7eHZw5ru2Oc6ia06B0bN9JiCPmHsOZwjHJiEL6HR8R4tHuHqWOXXdpKLjkQ4XuUdTG1GuSPh04gTTftENT8MvEpzO42rHN7l3U5syn9TY5dJGQEJh5hO8T5pjxOh4rnPpI9nHKyga/iVXiE/JgIsIyrisVeDomjKNuRKT07bktQN+S029gqFdet++ySeoihaIjH82bmPMycpuPOglOc6/MNEvK2A/kCEIUoz2ufPBd7maIfgY/4Gypu+9S4rj79EJwh8aOSPMA0W/GoqjaTv1Nafa6YswoVON3xXh6Om3B0eRLiZ0TJXgZ7l9YeLfxONsjEOuLB8+7uvuu7gb/+bq7LJfPWm3nBRaa5HlfbLrkdGmTPKSMHagJIzel6ZMlHBZRDxZNA2+muNnQlCfwtSjuDi4W2OxBgquPqEoOEpxDj101I18sC9KxRDmXMNuZZTN8khO0zThJoc02k2Fdzwy2Hkisdnlkl9fKs+GMjJkUYzN/ThmtaQJnZbZ25e2YVa1US83mqlY1oplS56g2Uxl8uKgaLM6sCV0Igt4FrNyAEV3LDrMJZiTSdrdz89QtmvWFukgmOCKFj7Teiz6qGidNY2UaRh4f6TnvFB+VuDU12bfgdhYnldnVlrCbeu9tvDQdbude0nl7Ih1ZVk5OlqGjVtCsr9YDFOK8FQxhrIWvaQ5el7rxwyyGu6FQCRv2pyazCde5N5v+sKzCTYW1+4LCTh3IhVTbWCY2NMyrIgRYZoZwI/9qHcx6UQrYSH8DKdbWIRj+NinAjq5ryXBIQlV2dmnF3FEYQFFK+VgRcZBER2jAxmIfg/t1qII+EZVwO2Eqgn6AqzRtbfPKLc5F0pUvsAzOrmOWJ7gotzpFp5ls4SaPZzKYJyutEQ9088pulDu/KiblL0iVchj/z1TR5wlcF6xF2gMh3OQKjHS+tgIuVMKhCuUJDXsCLrlM7YBogetYeA1BBffJ5r8gh/q/zTlLw6Q1TH1qn8ZIUDiPVCII2YOyZKLvFGLV4uyyJFlByERUSVyZW7EH5JCwvq6BDX22ByiBUDfVpCgDBncy/tznIoMGsW5y/qmdj03m87YHujuwLZbdf8ZepFYq+qWjoOk9+0xPNSsHrznYz3nU2oq1oPFq/cxHbQ6XPkj/gfOPipDZHyf0gdrn+1BbEfzWYNsrBFF9yTYeSBdIWx4H0DjZRRtMmpRtWIru9sLbKLiRLjrdGV/I0jfpdM9p7Flz5rJzcvH13ef5jF1Y2LF1udP1mBqS9mSK6vZoOsgYx5hftco/PPHBfXD0Nlzxj5mS9mr/AVzxwZRhfySA5LfONVs3/wIAAP//AwBQSwMEFAAGAAgAAAAhAFmmYEwfBwAAm0AAAA0AAAB4bC9zdHlsZXMueG1s7Bxdb6NG8L1S/wPi2lMr1QEcQ+yc7dPZCdJJ19NJl0p9uBeMsbM6YF1Y5+yr+t87uwtmiQFjIA5u6ocY1jA73zM7O5vh243nSg9OECLsj2TtQpUlx7fxHPnLkfzHndnpy1JILH9uudh3RvLWCeW34x9/GIZk6zqf7x2HSADCD0fyPSGra0UJ7XvHs8ILvHJ8+GWBA88icBsslXAVONY8pC95rtJVVUPxLOTLHMK1Z5cB4lnB1/WqY2NvZRE0Qy4iWwZLljz7+v3Sx4E1cwHVjdazbGmjGUFX2gTxJGx0bx4P2QEO8YJcAFwFLxbIdvbRHSgDxbITSAC5GiRNV9RuivZNUBFSTwmcB0TFJ4+H/tozPRJKNl77ZCQbuyGJ//J+DjI2erLEpTLFc+DTq99evVIvVPjISgwi9bye8fybL7+w9778+ub1X2tM3nT4Vw4IIw0CpvsZINCvkgCu0gD4ZD/xr5gAgJg5XnIK0PQstsSUAodKAho8IpaRmkmoEglsPFxgP5GbBqgwPb3+6uNvvkl/A8GBNOlj42H4XXqwXBjRKLtt7OJAImB1IEw24luew5+YWi6aBYg+trA85G75cJcOMEONnvMQmA0dVPgM/O+MPpUxV7CcjWTT1G4Ms3fLJL6b8F2ALDdzuhRkJEAeJEREgA32qQQ4hTJTaM6eCLLJPk8BmdpPZEHHMuMAzqp6pU65bR4LeSe8fU40he/lnvRqqIXIiX21qIFyISOu1MtpfZVgNpVStoYYoVWT/R4vE69QwUj7TRppLI1GRVzsUq5MoxHz7D2VunMp19cf5mZDcPfIdXeJwBUNHTAwHkLORJzAN+FGiq7vtisIHD6kdzwAsOcOPL0MrK3W1cu/EGIXzSkWyykLV3shRBEwo2GoDBY5QG8nZs80GW7NAYVYp94yK2gQUxqNeNBoFmh3yhxaJlDGWlCQGQ7mkPfHuSLkEvHYeOg6CwIROkDLe/pN8Ar+zjAhkByPh3NkLbFvuTRd4FDSb8KCAdYGI5ncQ24f5yeRwAfsw2RDJ4nmKPkGw4ehU/IFQDzGu+QbnMjDNMbcOV/MuVz/ZyTPZQW9LKsCx6t5S1h+esQ9Z47W3mNf0Gcf5guejucnNNDGqHwG59I47i1zL3XRqcWfKEpC0LUd1/1Mo+OfiyTygl1sFkLFBWpwdP1NizX0EjKh6JIHW35Dg68IjcMWwBo0oB8PV9osdhPkvX2ZYNWVpQQrDcoW0duStVq5W1q5oDWJ6A4oSe4mLP9I7t+5aOl7Dn9hPITCBb+V7nGAvgMgWvGw4XcHanlQsSTIFkYoOzaLfIJpzSuLkQdQPgGSUT2Oy5uW2iI0gckFnP249mZOYLLiqsDhqvzmAvoUYOLYhJeCQXuyZcCysGwRrHYAJBfbXx2mwYdEQ2uD7RSNYIig55lIwniRylfSH5oYZ/BX+hZYqztnwyzqEFNpMTNiKqj+WZhonh6ATbSHxT1W3N0zVsCxncZa5DDLW2vKR1EOPIePquCP9kOCKL+2EXJccNMMti/zwuKGZrCtpPMxwEaipWaw/a8XRrUQfkvnRZUzzpNnQHma/GLyPkGmxeHznGTKNpFfnE/Oprq1SVFDPjk7/r4gqoUECnx1zQS40lKpQJL7uZ9mCHp6ZrgLsVAoZaSWdpAYPXH1pfLCNMX5PPwhxUnj33CNo5H1Q3ZJICUH2rzztFWwZuRQuu5SRg6nsF7B3/5XdCiPjgM1D7p9X7OSWkOHSshhr6x6prZ8oLzXGjmcmS0LXhT6XrIrla0OZ4IJ5BJwFvEsVUUqvUnSlogg1ILODHfRAsBZPlOtvomdBk3YGjnxVkMzeVDeSgDGj89HT7yKycsfqFNqfzKdcj7lA8H55BKpVfGBdcGzbRXmec5W7buJ/vL5HE6NHZrybvJE6l2HlrNLFIRd2zMXhGgIdFPoeTb5m0gcTtn38RhfaAyWj+qnEFidcup7cTa9WVGqqakJZuY3irW7oespaYedtHQOlIRYaJ85tjUOfF4FaHl9Q7l6U4CZsE4op4MFsI7W5wJYee2AB2wjXTw5maXUxLZIPgLo2gLShO1R8JRi62ep8nIRnnmet0gpWbMptJcKPaypDtZdL6pEz5mN5I+0NdEVbGa2Ri5Bfkb3KsCcb5J+WHbcjdAz3KxTdjcLYDd3FtbaJXe7H0dycv07azKHSB899Qk9YMJAjOTk+gM906IZtOscWuk+hHAEBb6ldYBG8t+3k6vBza3Z7fTVSb/Tu3T0zkCf3HT03nRyc2MO1K46/Uc4SV7jHDk7+A5eSOtdhy6cNg8iYiPkPydjI1m44eiznnlAW8R90DXUd7qmdsxLVev0DKvf6RuXesfUte6N0Zvc6qYu4K5XPG+uKprGT65T5PVrgjzHRX4sq1hC4igICW4LiFBiSSjJfxUY/wsAAP//AwBQSwMEFAAGAAgAAAAhAO3E3HHrEQAAQjcAABQAAAB4bC9zaGFyZWRTdHJpbmdzLnhtbJRb3W7byBW+L9B3GBibloItyXb+WidOociSY0SWDUlOsosCxlgaSawpkktSdrQoFosCLba326LpE/SqN73p3jdvkifpd84MKZpDysnFbmRxeGbO/znfHD3/3fuFJ25UFLuBf7i119jdEsofBxPXnx1uXYy69d9siTiR/kR6ga8Ot1Yq3vrdi1/+4nkcJwLv+vHh1jxJwoNmMx7P1ULGjSBUPp5Mg2ghE/wZzZpxGCk5iedKJQuvub+7+6S5kK6/JcbB0k8Otx4+xL5L3/12qdr6m/2nT7dePI/dF8+TF8PAn0lxLqPEV5F448or13OTlRgFgSc+/fB3cRpMlCdacbxchAkYiZ83kxfPm/S2pvDSWyoxVp4Xi0Ph+uEyicUqWAo1cZOG+BoPgls8uVYrITMqDXEcKeXje7lMgjrxs/RkQ5xHQaLGiZrw3nKycH0R4rXbIJqISH27dCM8SwKmLsxrcaN4plZDtJdRBGmvxK/kInwm2tJTEHRUXAnO5UIlynrwRoKv4uoL301EU/RxyOKjdL/i9687w+JXQ+WBRzGNgoWYREE4CW595rf7TkQyUUYmLon0SkF8RQLpOgfERQi97ZGCExFMRcy0IaOx4b9myYYFDuJq0hAX4YQ2pF1jKE+A8kBNFUlOCbYp4bAWLDKZfOPV4irwNuyiGc1TLi5+G0TXcAoxkasY4l0EfjIvrjkDn5IMUHpiXKHMrutLf0yUXB8qVXAjlqfzAFRXSkYWFxcxRAUzEtL3l2T37dZ5552QiyBK3Jj3s+y9IUaRe62MYb2UCbZKX3QuhkfWJnq5B0cnvQQ4FS3bEX4grvTbtnRPuvC8xZWMpcDp5ssr4QXj0vNo6tOMdZxmIRyWYWzR3dv/9MPfnuxqEduubHgJ5fhaxO53SjjXb+cWkX4At2Q1YCGEZknIkMlYhfTL6PS653Du8fUz8emvP4qv9nYe7e6yMp7S8iqqed2Ijcw+rpPOM2sRnju13bYhjGXBatrQjSWUUwTTRJFhaT8RsCY4WsI2wCwai7X1voIJ7oirSF7Tv7GKbtyxdYIOAu9sJdR06o5djljO9aJCYgMlvTpioYcYaPb308BclFeHgkwEmrBq7QUULco1cRy5oCgjdzoVMtlobkdk/nKCoEOZgcPWkXThAFkktSTYXy6usD4VWiycqYdsZclrSH5NwZ0fswFakU9Gi/qMQlYI1mCfmqeeReucH4eS+AJBvGaH+LPpNIFqos+jFamxcm8oXFDcHgdIxRSQbhRkGkbBWMVxYGURiMqPEZm9IAbbD2yWQwRiOSMaiVowxWUEO1N/gPIQ7Ir8H0XYECYdLBZuTHXFBgmoqI5UDmrr1UVy555MKImKqdoky4xSmK731I3l9m8Cb7mAYnA+bZxOD2whppc4RuhC1+Ix/J3W8PLi2QbBEmqeuFQhkabZKcqoYaE/qYNGCE6R1lhwIqLXLZ+wjfellEPRmiKQ+AGJM+AqR3rWoRGSmLf4Voa0jLSP0LwI8P/xauwp6w3j2aifSGmwHBKNifiCyFiFAb6LcwKk9eDYyq3ZafksEBCZikjm4Hk2RwFmh07wuJDRDBke0UteBbBapeMORTDr5K+QbxA6/Ti/Snz8IJw9sW0oWS91G6IXzKAvdxwLovAlEcHL3iyPDexIIbJyGqaM51/P6tcLO33OwawuFNeExx7Cqx3fS1yKA/wsIp/VQdHawLx0rRQUlszdGMWSjCx7G7gT1FVrj6hQaC9AQOWQHlrBswXToQDhYQ1TQqgmb5jZTIPnQNwqdzZP0j0tEzNbZW5FJzIUbTGe+ap+K1e8N85X7lJoC5BgVLKMUKpvonaENmWO/zKfLprpcdGAqP9g/2yTPqmuG2pbL76ZPR+jf/EVOhCdxYrr1pkI7Ubi1tmgxilxqqEt+bc1xXXdhnhFC+2gtlzJOgo2CCqGryWoO/gsIlf4Wec2S+7UNFW1mylnyqqYznuKX4ioFBCohE735vhb3PUUIaueyPcuhWcdnFYiDWiwZNQpalJ8iRyadfFFcaRKo9sjCrtUQZTtYyoRdilTbhlvpHRKSiuNWEVvfIbuitPljCyiOgveaXrI5uy2SsnxPGupikc2TRSSz3Lhi5fCMf1ZXBO3c4RZytjqPczMhx/rVkv/0RAtz0MGoQ4b6YpbZ5QZ0hujGTZ9IPp8ypXeympy2yXS0+UQ2aeVW0rbtD46WcvkXw+t4vu18lfSF8M5yhXyQ5IS2XqlTPrH/eIJPv3pX5Y/ujMVuSDcRwkphXC+39sVeBW4wB5pwXayb6xuemSfdiT976RPdLMDO9/v74rRN8NKyhfH7yy92pQvZgTX3KX7W4F3K+m+O+taXt9tlXwlujDusXjZ7rTOWL5vqX9tTVHISgjmsQCl6l1aZbukJDutNlNsI/9FiBJ5oq1qomhSi+f8ypaROELRhTYLunu4y65DyivrgzsXA9sm/l38qrOMAiL2iC2AOcaLduV8H3BlupRtodsTjWM5+MNb7axTskWXPNKgWOGSQBJd7+cAsBQXmRGCVYMPZ+UYx8fYFKCoCdJa0nLdPeBTDDSQH/GRRGsD5NBDThMuGoSirLS7o0SsKqK7GlgD1GAXwwaWAKwARIVRiTKPgyL1U1R/Jq4VT6EJTUiyhi3HwCmWdM9PR07U3NvfMQjEjvj0409cgoIDNLYZDFTcI4VZGJogKGTTmalUx3Fx9Kb52LWcOyX4hcfOsBM+eVrMZxwQglU8eh5AMFVraVO0BhRwdoJwE4KtbstIfvrHf4HQJhCCNqM12dQQ7MjJ5FOYazvrQ9bf8JYa6CiysN9Aro58ivwDpDMfiK+xXEK+1k2Xk5W6dndAXXPei6zYku7ACKYBLjK7rOgkuSlEa0h6rpHOYcL0ucjAMRfzGiqvbpkDAwhchqbXgXFy6/6gRnbKMMKlVVL3FZqSgEGTSjjC7ExETE2Sa+Hp26yzRiduBUloOxVOZMT/GRpHHdzsESM3ujF3es0yu3uYj2C64mZEsy7juqwPNWglHIptVR0ua4lUr3vjsjBi9ELHgXqaZd0vR09T+m0mplvXS972blNqIyzr6PwldqV34GPSkbmsJumVqYbPLbMk8AUa0szev8ujhkkS53yZ0RPD5QJl+Eps8DfLYBDoIhuKKT98kc2hNvFd4QIfzDhd+kt0O1Y24LhkpGDVOZz1HF8Rhjex7Kmvv2cQOOX1xlXWBUge29QhAtmTw9P2+nwW9UwkjCzlVmr9ljNC5AHd6Ti7LXJGZNH/9M8/i35nlMaXXFq2lqZRdJtzK+jrbQAhCJYN2hbrnccN0SXcVAwQcOtLKw6ti4EKfLWIwxYZ1tR1QqzQHyN1MbkEPJQwN9yDVCzNUyPuiruVkSpbl6eDkPY5ZEqWaSp8K4IqpWSBZhsPiLlNlciThniJG9frOkVi0ULXvYpdO+krwt6Lh+2XlGE5YpsD9R0b5HzEzgvxI/P9TDw1e1bZtD6pjAXjWppRvdWG5cgcP2vEx+SP4loCBEhcazwAAL+xhRLHhlxBT2cvK7zcV8vfxRU/t5Qf3Qa6uQamQaDZ1Yr/PWAcox74MASHbtY00sl/a2zfAEI18UdeqsEKXjoO6no1L0QzZeAIq8Jn1egtKPWVJV5aYkhXLUnL9/IrZyrNuSq3Ihf7Za6yLS7IynB9TbiTFuHN0mozLZXvK7tLSurKjZ/s0qbp9Wf5vsXCuVSKKT533+EyZNA0BnxhXiq9lOKdzgDgm317nIlRc5OCbtwNlLNUVrgTW02OhuVF+7aR0jYX6Ntml6JkUaKvMfI0vQBK1GkxWvoWcYbO7wenCR3miH89azJSTCXcgj+WZ0zU5AbnFg6h1mqyjautxK49MspmGa4WeCHIV+bu0iKu1DASrkO4QcjdreLwhMAVT677g8yf00DFqbycur4sJVnQDUSRnrkfCOVqAcylmoyGNUHF6goeFEmS6VDM/YJDUoThOHe4KxyzgwZJASjWnq2D2yGf4+MHioaMulq7o0u4i8RnJoZ3fg10NQXRzW2UpcDcdVN2kUTb6fRh1+26vdV4dsW1Sd6ldYVuvimr1Pn0n289hQZAGxNvUqWXNBlzd0ztWWXQT6+woPYNdLUAsm4iU/t2aSd21zK2uRulhcXT2pVzVS1erJY1uEX3C+VuzxWsJZxcSbwhzmWgAjphLZJSaqiAjWN1xoGPKRRcNDqur6fh9GgQNbB+kNAsE1mXaSIsa6zw93I3hnmHGIer8PHqewXtcQ/I3Nm/igRIZ9odnXUlUVyU+fCB2M157AGzp29INtFnrZkSbXNTnW+/CZHIO2z6pnW4dXnJAAEHm4N1u5wvoA50pKz0is98V8OxmbyKJ3p6T5PULcJQFm5+70TkUNFIh3tDgzVV5X+P5kLS8UTGysz1j/TxUjYGibGziUAsprt7TGAk8spDrl3yUB5gmTBEicqDkpjaejsHAox/B4CkAblh9CCbl8EMn0Raw/VSrIfZBO5ZkwXmFKh5tmrTEW0j9g7SQZ4UIiffIZtct0KomM1UhwGPyJZLxmaa9gAOoWKHmJPIILWPH5w92BVNwjyo4QPN5FyG+KDdBB/Cae3jB9MDkQUaiJxsEVMdqA5yxlzUO44pnF5N/J6Oh8tN9KUcg+2Dae73D3LDCpmPsabSxgbMDyncNXNZhfjPu1TJSI9m/E42YHfKjWOtmYPjUwu9hmMBCOg7YStk8VnAHx1PO7QVh1mvD4uc6R4jVS61bOCMJxPIF4kjTh66oEnvXCuqRW578ihu9xmaxNtY3BAcxQXdDk3hmC+yeoKGvwpXuFXN4PpkmtfSwYqRGyLM6DlaCYNN7V98+stP4lWAMST60A58DCHrxECtFOYS+fKSH2UehBxS4mM140k3brwEzm4cyvKle6PFK0w/Ax3GoGlRXecXg/OzYcfK0DeYPOZ53GSO+Se+VVFZuoMcpdCbngZmVjs009skbTnWYyum9Y1TJ9/Wt2BZQ7Bwvev8uNR2dlml7TtD+Woco85pKm3dhXOwX9d8tPH//iP4Tt8uT1mBdE+GOMcjxTGmDuhiXodyjL7fuRfgJfZl98Vg0Om3vy5Ky8xSY+AcU3HpyLduzkl66XQ1yoG81WI+vGTW+saV4qR/1HnXPG2N2q9MpgGZsqnouTuZ8PXfKDABu3DHv4MxEcwF0jj7XQJOOtB+oBXZoin3/d39J1rUNDdPmuFZgio5nJRMlS9DmoxQkwO+hHXoer62Q7fpO3TxvUO31Dt8iey0uy19z4zn73ABrL/ALTH+5slkXLg2xKB0KJwgShduRcPIUCGFFZ2v4M8zjC1EJZMKnaOT0Un/GMI9vxhZJekZATHM9dX6pwQ8z1ZmGGIEheiRCdywGgEjJd66Cebz0p8KsIdkggW8qocvrhRysh4qjNyrJUUDY5gmV5sfMhCTABSuMSJfNDiyhU63Q8Zoue4rtglt5Jitz9QP/zcyKoyBAPbVesYpiK/MgqsMl3/qoQ3Tx+8WMJOls3733WX77KgDLePToDUyn4Zfnw4tDl53vhbds8HpRc8aQ2iZKXgnh33UDsQhAx0wh3tubi/prhI/4jgdmYEwzGFleDYSWzzHaG9w+8yA3nDKFOTPgG/6UQJEjHhnfjhzwIsvCdw+1B8z2OuSOnm7uhm0jjoDcQpxWHCos1dLJ/w1pwd0WAfSd/ZrZlBAX9UdIGPp6eDLsLxywTsPawLZvtlDKuIf4dwpZnKjtVj6qJa/wjvQaG1a7eD541oh7h6YApw2B/JD42+ojrgDxXLEihxuDEHy3Z4li97Z8clwdNLGqFWZOAgg1RaIPLEugnKg6HcKwxgFrJMTQg68pOif4aJS4wc87M0VBWS7Pml+F0rQ2b1arrPhzM2gCpUndsLt9IeIJm9ORlYuGHER/fTjh6cY9UdsMjkbFqkr6VzVjJz/pVVCRUHAaU3//Imjxp3Cv1guWdyct4bDt2cD6y6cQ1cxP2BoRIcxSlRomVHbs7DMj6Yw7ES3QyUxDplJzweWxOY3ncHw5Mwa1rrZ59Dex6QwD+9TfsIQgBtFQYTp3tFpT6DqcKcS2c14qth7mLY8sF3Yq4LgkSTXv0Va52Pqe+ysmhNPE7+Be/F/AAAA//8DAFBLAwQUAAYACAAAACEATGKwLnwDAABREgAAEAAAAHhsL2NhbGNDaGFpbi54bWx0mFlu2zAQQP8L9A6G/htHS9IFcQJwkXiA9gCGo8YGvASWUbS3rxAuoufJn34eznAWDjl6evl72C/+9OdhdzquivLuvlj0x83pdXd8WxW/frZfvhWL4bI+vq73p2O/Kv71Q/Hy/PnT02a93+jtendcjBqOw6rYXi7vP5bLYbPtD+vh7vTeH8d/fp/Oh/Vl/Hl+Ww7v5379Omz7/nLYL6v7+8flYVRQPD9tFudVoZuvxWK3KppisR+3UiwDV4lPZNzmh2QkunoURIHoatR8tUrNkFJqLr/LVSC6jDtP+ynHuHlfxtBkvkBS3ZDUJTwiaXwc6ilWVf1hNyPBYk783kZJsTfvKXgdrUj5B9jye4YGb7CatunjNQFdeV0y97pCZGvv4Sh5vfukIVUJ1qoba3WFeqpj1q+t6DrmNWU65KBJzulK1pDCKgWL6obFWKN5jm9EufZ2mb8q5Gk+Ypnm2p8QavD8YfKx5DnxVmRedOn5tFaBuKBtkulAWhALYkA0iAJxpc9+bl2SFjIWxIBoEEVbvtAm460EVgIjgZZASeB82WYuStBKYCUwEmgJlATOn97MrAStBEYCi3JpQTqQsLfsVN440LLLOoRupoB9C8qPgySmlMSCtCAdSAjp5EdIrTxmjivDxZIfPDSm4BsPLZIPbRbEVTjq8aZJPfnGFRM7WpRra38fTJu3IAZEgygQF3pcVpMgLYgFMSAaxM1Yl2XRhTspawAgFsSAaJB4202aXS0TZHi4IGO5CkSDKBAX7qc88r4gc98lMVilQRSIC2+W3BZ6OmQsiAHRIArEVbKJdCAtiAUxIBpEgbjwqs18B2lBLEh8L2cNBDIuvDezDIJYEAOiQDo0Ewti2HBAXHiN5dGQNWYhY0AUiAtvuNx3WWMWMvGtmUdVrnJhwsg0g1gQDaJAHJp2y8Yub2CFK5knUF6jHdv1TFniHp0pJ9myNFLcIjXxCZ4nXQbZIDUdwmVAOoRL443D7tikmeVqstUVpokQWU43UjL2PEgmW2lC4XAqx52Q4XxGxGQptcSnbPY0aeIAMo3BNxwPIcK7I1yh4E0c3eU4FsfG9MAIz/vclbiHJHPLepOG9us0NfgEECQzK0GGoxMG8nAysrglr6cPHPP+qjqNftefSILOfD9x6Jt0ooRm/EoDoPgEAy8esgJZpo9Bz/8BAAD//wMAUEsDBBQABgAIAAAAIQD4d+KWXgEAAHcCAAARAAgBZG9jUHJvcHMvY29yZS54bWwgogQBKKAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMklFLwzAUhd8F/0PIkz60STs2NHQdOB0IDoRNFN9icrcW2zQkmVv/vWm71Q598DH3nvvdcy5JZoeyQF9gbF6pKY5CihEoUclcbaf4Zb0IbjCyjivJi0rBFNdg8Sy9vEiEZqIy8GwqDcblYJEnKcuEnuLMOc0IsSKDktvQK5RvbipTcuefZks0F598CySmdEJKcFxyx0kDDHRPxEekFD1S70zRAqQgUEAJylkShRH50Towpf1zoO0MlGXuau0zHe0O2VJ0zV59sHkv3O/34X7U2vD+I/K2fFq1UYNcNbcSgNNECiYMcFeZtMmv60ORkEGxOWDBrVv6W29ykHd1us7yD75zaMmLAhySgOYZ36kaXT08rq4T8nvCb2lDdatAIm+TdaFOndfR/H69wGlM40kQRUE8WdNbRmM2jt8bQ2fzje2uUB5t/Y8YjRmljI4GxBMgbX2ff5X0GwAA//8DAFBLAwQUAAYACAAAACEAplUnN/cBAAB2BAAAEAAIAWRvY1Byb3BzL2FwcC54bWwgogQBKKAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACcVM1u2kAQvlfqO6x8D3aaCLVocYQgiENQUGyi9FRt12NY1d61dgYX+kZ9jrxYx7gB05JI7W3+9ptvvp1debMtC1GDR+PsMLjsRYEAq11m7GoYLNPpxcdAICmbqcJZGAY7wOAmfv9OLryrwJMBFAxhcRisiapBGKJeQ6mwx2nLmdz5UhG7fhW6PDcaJk5vSrAUfoiifghbAptBdlEdAIMWcVDT/4JmTjf88DHdVUw4lqOqKoxWxFPGc6O9Q5eTmCttLDlci9uthkKG3TLJPBPQG29oF0cy7Loy0aqAMbeIc1UgyPAYkDNQjXwLZTzGsqZBDZqcF2h+sIDXgfiqEBpiw6BW3ihLTLApa529XVRIPp7CxhQFK5yB4IZ6wxS5sE3uze6Zrm2u4/6+gI03C1usRaFW3Ma6snz+CfgPXa7Od2lotmNz+1NBUkM80n2+UJ7O6POpq8+eXavOb0WexAPk4HlHWfSjFgdrhLgpq+aeT6Y45FOvMvBi7rLmvs8A3LmVQTIa36hJwKIhU/NmnMWYue+CnFg2i3GmxfTpy/h+cpu8lnwYpa8nk8/zk4MnSv+h7Z2x33BZpW6iCF429TQok7XykPFyHzb5EJAzXlJfNCDjtbIryF5q/k40L+yx/Ubiy34vuor4yXRiMjx+GPEvAAAA//8DAFBLAQItABQABgAIAAAAIQDFxOklggEAALgHAAATAAAAAAAAAAAAAAAAAAAAAABbQ29udGVudF9UeXBlc10ueG1sUEsBAi0AFAAGAAgAAAAhALVVMCP0AAAATAIAAAsAAAAAAAAAAAAAAAAAuwMAAF9yZWxzLy5yZWxzUEsBAi0AFAAGAAgAAAAhANfDFa/SAwAAEgoAAA8AAAAAAAAAAAAAAAAA4AYAAHhsL3dvcmtib29rLnhtbFBLAQItABQABgAIAAAAIQBnDFulKQEAAAEGAAAaAAAAAAAAAAAAAAAAAN8KAAB4bC9fcmVscy93b3JrYm9vay54bWwucmVsc1BLAQItABQABgAIAAAAIQDuCyCL5QMAAAMNAAAYAAAAAAAAAAAAAAAAAEgNAAB4bC93b3Jrc2hlZXRzL3NoZWV0MS54bWxQSwECLQAUAAYACAAAACEA771fbjIJAABWKQAAGAAAAAAAAAAAAAAAAABjEQAAeGwvd29ya3NoZWV0cy9zaGVldDIueG1sUEsBAi0AFAAGAAgAAAAhAN5fEBLGCAAAUiUAABgAAAAAAAAAAAAAAAAAyxoAAHhsL3dvcmtzaGVldHMvc2hlZXQzLnhtbFBLAQItABQABgAIAAAAIQAqv4lP5wkAAFwtAAAYAAAAAAAAAAAAAAAAAMcjAAB4bC93b3Jrc2hlZXRzL3NoZWV0NC54bWxQSwECLQAUAAYACAAAACEA0WDySLQSAAB2lAEAGAAAAAAAAAAAAAAAAADkLQAAeGwvd29ya3NoZWV0cy9zaGVldDUueG1sUEsBAi0AFAAGAAgAAAAhALT1a5l2AwAA2wsAABgAAAAAAAAAAAAAAAAAzkAAAHhsL3dvcmtzaGVldHMvc2hlZXQ2LnhtbFBLAQItABQABgAIAAAAIQDppiW4ZgYAAFMbAAATAAAAAAAAAAAAAAAAAHpEAAB4bC90aGVtZS90aGVtZTEueG1sUEsBAi0AFAAGAAgAAAAhAFmmYEwfBwAAm0AAAA0AAAAAAAAAAAAAAAAAEUsAAHhsL3N0eWxlcy54bWxQSwECLQAUAAYACAAAACEA7cTccesRAABCNwAAFAAAAAAAAAAAAAAAAABbUgAAeGwvc2hhcmVkU3RyaW5ncy54bWxQSwECLQAUAAYACAAAACEATGKwLnwDAABREgAAEAAAAAAAAAAAAAAAAAB4ZAAAeGwvY2FsY0NoYWluLnhtbFBLAQItABQABgAIAAAAIQD4d+KWXgEAAHcCAAARAAAAAAAAAAAAAAAAACJoAABkb2NQcm9wcy9jb3JlLnhtbFBLAQItABQABgAIAAAAIQCmVSc39wEAAHYEAAAQAAAAAAAAAAAAAAAAALdqAABkb2NQcm9wcy9hcHAueG1sUEsFBgAAAAAQABAAHAQAAORtAAAAAA==';
+
+// ── ZIP-level Excel patcher (preserves all formatting) ───────────────
+// Patches only the <v> values inside the Assumptions sheet XML,
+// leaving styles.xml, sharedStrings.xml and all other parts untouched.
+// Uses fflate for ZIP decompression/recompression in the browser.
+async function downloadExcel() {
+  if (typeof fflate === 'undefined') {
+    alert('fflate not loaded yet — please wait a moment and try again.');
+    return;
+  }
+
+  // Build config
+  const g  = id => { const el=document.getElementById(id); return el ? +el.value||el.value : null; };
+  const gs = id => { const el=document.getElementById(id); return el ? el.value : null; };
+  const config = {
+    assumptions: {
+      currency: gs('sel-currency'),
+      fx_rate_to_usd: g('n-fx'),
+      working_days_mo: g('r-wdays'),
+      interest_rate_pct: g('r-rate'),
+      trike_loan_months: g('r-trk-mo'),
+      trike_cost_usd: g('n-trike'),
+      battery_kwh: g('r-bat-kwh'),
+      battery_cost_usd_per_kwh: g('n-bat-kwh-usd'),
+      maint_pct_per_mo: g('r-maint'),
+      efficiency_km_per_kwh: g('r-eff'),
+      electricity_rate_local_per_kwh: g('n-elec'),
+    },
+    trader_dairy: {
+      num_trikes: g('r-trikes'),
+      farm_price_local_per_L: g('n-farm-price'),
+      offtaker_price_local_per_L: g('n-off-price'),
+      transit_loss_pct: g('r-loss'),
+      driver_commission_local_per_L: g('r-drv'),
+      platform_fee_local_per_L: g('r-pf'),
+      volume_L_per_day: g('r-vol'),
+      route_km: g('r-km'),
+    },
+    baas_afternoon: {
+      kwh_per_swap: g('r-kwh-swap'),
+      swaps_per_trike_per_day: g('r-swaps'),
+      baas_margin_pct: g('r-baas-margin'),
+    },
+    taas_afternoon: {
+      pm_rides_per_day: g('r-pm-rides'),
+      pm_load_kg: g('r-pm-load'),
+      pm_distance_km: g('r-pm-km'),
+      taas_tariff_local_per_kgkm: g('r-taas-tariff'),
+    },
+    logistics: {
+      num_trikes: g('r-trikes-log'),
+      tariff_local_per_kgkm: g('r-log-tariff'),
+      driver_commission_pct: g('r-log-drv'),
+      rides_per_day: g('r-rides'),
+      load_kg_per_ride: g('r-load'),
+      ride_distance_km: g('r-ride-km'),
+      empty_km_per_ride: g('r-empty-km'),
+      hub_cabinets: g('r-log-cabinets'),
+      cabinet_cost_usd: g('n-log-cabinet-usd'),
+      swaps_per_cabinet_per_day: g('r-log-swaps'),
+      hub_baas_margin_pct: g('r-log-baas-margin'),
+      hub_taas_share_pct: g('r-log-hub-share'),
+    }
+  };
+
+  // Decode base64 template to Uint8Array
+  const binStr = atob(EXCEL_MODEL_B64);
+  const bytes  = new Uint8Array(binStr.length);
+  for (let i = 0; i < binStr.length; i++) bytes[i] = binStr.charCodeAt(i);
+
+  // Decompress the ZIP
+  const unzipped = fflate.unzipSync(bytes);
+
+  // ── Patch shared strings for string cells (B6 = currency code) ───
+  const dec = new TextDecoder();
+  const enc = new TextEncoder();
+
+  let ssXml = dec.decode(unzipped['xl/sharedStrings.xml']);
+  // Parse all <si> entries into an array
+  const siPattern = /<si>([\s\S]*?)<\/si>/g;
+  const siEntries = [];
+  let m;
+  while ((m = siPattern.exec(ssXml)) !== null) siEntries.push(m[1]);
+  // Helper: find or add a string in shared strings, return index
+  function ssIndex(val) {
+    // Try to find existing entry with <t>val</t>
+    for (let i = 0; i < siEntries.length; i++) {
+      const t = siEntries[i].match(/<t[^>]*>([^<]*)<\/t>/);
+      if (t && t[1] === val) return i;
+    }
+    // Add new entry
+    siEntries.push(`<t>${val}</t>`);
+    return siEntries.length - 1;
+  }
+
+  // ── Patch worksheet XML (Assumptions = sheet2.xml) ───────────────
+  let wsXml = dec.decode(unzipped['xl/worksheets/sheet2.xml']);
+
+  // For each mapped cell, patch its <v> value
+  for (const [section, block] of Object.entries(config)) {
+    for (const [key, raw] of Object.entries(block)) {
+      const path = section + '.' + key;
+      const addr = EXCEL_CELL_MAP[path];
+      if (!addr || raw === null || raw === undefined) continue;
+
+      let val = raw;
+      if (PCT_KEYS.has(path) && typeof val === 'number' && val >= 1) val = val / 100;
+
+      if (typeof val === 'string') {
+        // String cell: update/add shared string index
+        const idx = ssIndex(val);
+        // Replace <v>...</v> inside the cell, ensuring t="s" is set
+        wsXml = wsXml.replace(
+          new RegExp(`(<c r="${addr}"[^>]*t="s"[^>]*>)[\\s\\S]*?(<\\/c>)`),
+          (_, open, close) => `${open}<v>${idx}</v>${close}`
+        );
+      } else {
+        // Numeric cell: replace <v>...</v> directly
+        // Also clear any cached formula value by removing <f>...</f> if present
+        wsXml = wsXml.replace(
+          new RegExp(`(<c r="${addr}"(?![^>]*t=")[^>]*>)[\\s\\S]*?(<\\/c>)`),
+          (_, open, close) => `${open}<v>${val}</v>${close}`
+        );
+      }
+    }
+  }
+
+  // ── Rebuild shared strings XML ────────────────────────────────────
+  // Count original entries, then append any new ones before </sst>
+  const origSiCount = (ssXml.match(/<si>/g) || []).length;
+  const newEntries  = siEntries.slice(origSiCount); // only the ones we added
+  let newSsXml = ssXml; // original unchanged
+  if (newEntries.length > 0) {
+    newSsXml = newSsXml.replace('</sst>', newEntries.map(e => `<si>${e}</si>`).join('') + '</sst>');
+    const totalSI = origSiCount + newEntries.length;
+    newSsXml = newSsXml.replace(/(<sst[^>]* count=")[^"]*(")/,       `$1${totalSI}$2`);
+    newSsXml = newSsXml.replace(/(<sst[^>]* uniqueCount=")[^"]*(")/,  `$1${totalSI}$2`);
+  }
+
+  // Write patched files back into ZIP data
+  unzipped['xl/worksheets/sheet2.xml'] = enc.encode(wsXml);
+  unzipped['xl/sharedStrings.xml'] = enc.encode(newSsXml);
+
+  // Rezip — use level 6 compression for worksheet XML, store for binary parts
+  const rezipped = fflate.zipSync(unzipped, {
+    level: 6,
+    // Keep the ZIP structure Excel expects (store content types uncompressed)
+    [Symbol.iterator]: undefined
+  });
+
+  // Trigger download
+  const blob = new Blob([rezipped], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const mode = document.querySelector('input[name="mode"]:checked')?.value || 'scenario';
+  const ccy  = gs('sel-currency') || 'local';
+  const ts   = new Date().toISOString().slice(0,10);
+  a.href     = url;
+  a.download = `Songa_Partner_Viability_${mode}_${ccy}_${ts}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+  // Brief flash on button
+  const btns = document.querySelectorAll('.excel-btn');
+  btns.forEach(b => { b.textContent = '✓ Downloading…'; setTimeout(() => b.textContent = '📊 Download Excel', 2000); });
+}
+
+// ── Initialise ─────────────────────────────────────────────────
+upd();
+</script>
+
+</body></html>
