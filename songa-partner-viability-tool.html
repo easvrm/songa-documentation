@@ -686,8 +686,13 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; 
       </div>
     </div>
 
-    <div class="form-section">
-      <div class="form-section-hdr">Charger, insurance &amp; licence (per trike)</div>
+    <div class="collapsible form-section" id="coll-fixed">
+      <div class="collapsible-hdr" onclick="toggleColl(this)">
+        <span class="coll-title">Charger, insurance &amp; licence</span>
+        <span class="coll-sub" id="fixed-sum">per trike</span>
+        <span class="coll-arrow">▶</span>
+      </div>
+      <div class="collapsible-body">
       <div class="row2">
         <div class="field">
           <label>Charger cost <span class="hint">USD</span></label>
@@ -711,6 +716,7 @@ hr.divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; 
       <div class="field">
         <label>Licence <span class="hint" id="lic-unit">KES/year</span></label>
         <input class="number-input" id="n-licence" type="number" value="1300" oninput="upd()">
+      </div>
       </div>
     </div>
 
@@ -1961,6 +1967,7 @@ function upd() {
   }
 
   const R = calc();
+  { const el=document.getElementById('fixed-sum'); if(el) el.textContent = R.c+' '+f((R.chg_daily+R.ins_daily)*R.WD)+'/trike/month'; }
 
   // ── Logistics demand summary fields ──────────────────────────
   if(MODE === 'logistics' && R.am_detail && R.am_detail.kgkm_day !== undefined) {
